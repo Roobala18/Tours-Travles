@@ -1,0 +1,685 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ destination.name }} Tour Itinerary</title>
+ 
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+ 
+  <style>
+      :root {
+      --primary: #8e44ad;
+      --secondary: #e67e22;
+      --accent: #27ae60;
+      --light: #f5f6fa;
+      --dark: #2c3e50;
+      --text: #34495e;
+    }
+ 
+    body {
+      background-image: url("{% static 'images/features-background1.jpg' %}");
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+.navbar-brand  {
+      font-weight: bold;
+      font-size: 1.5rem;
+      color: white;
+    }
+    
+.nav-link {
+  position: relative;
+  display: inline-block;
+  color: white;
+  
+  font-weight: 500;
+  padding-bottom: 5px;
+  text-decoration: none;
+  transition: color 0.3s ease-in-out;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  height: 2px;
+  background-color: white;
+  transition: width 0.3s ease-in-out;
+}
+
+
+.nav-link:hover::after {
+  width: 100%;
+  color:white;
+}
+.nav-link.dropdown-toggle::after {
+    display: none !important;
+}
+.nav-link.dropdown-toggle::after:hover {
+   width: 100%;
+  color:white;
+}
+.dropdown:hover .dropdown-menu {
+        display: block;
+        margin-top: 10px;
+      }
+
+  .navbar-brand span {
+      font-size: 1.2rem;
+      white-space: nowrap;
+    }
+ 
+    .hero {
+      position: relative;
+      height: 60vh;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+   
+    #map {
+      height: 100%;
+      width: 100%;
+      z-index: 1;
+    }
+   
+    .destination-header {
+      margin-bottom: 2rem;
+    }
+   
+    .destination-title {
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+   
+    .destination-tagline {
+      color: var(--dark);
+      font-size: 1.2rem;
+    }
+   
+    .flight-marker {
+      position: relative;
+      transform-origin: center;
+      transition: transform 0.2s ease-out;
+    }
+ 
+    .flight-marker img {
+      width: 48px;
+      height: 48px;
+      transform-origin: center center;
+      filter: drop-shadow(0 0 5px rgba(0,0,0,0.3));
+      animation: float 2s infinite alternate;
+    }
+   
+    @keyframes float {
+      from { transform: translateY(0) rotate(var(--rotation)); }
+      to { transform: translateY(-5px) rotate(var(--rotation)); }
+    }
+ 
+    .day-card {
+      border-left: 5px solid var(--primary);
+      background-color: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 40px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+ 
+    .day-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+ 
+    .day-number {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+ 
+    .highlight-box {
+      background-color: rgba(231, 76, 60, 0.05);
+      border-left: 4px solid var(--secondary);
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 15px;
+      color: var(--dark);
+      font-style: italic;
+    }
+ 
+    .btn-book {
+      background: var(--primary);
+      color: white;
+      padding: 12px 28px;
+      font-size: 1.1rem;
+      border-radius: 50px;
+      border: none;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+ 
+    .btn-book:hover {
+      background: var(--secondary);
+    }
+ 
+    .section-title h2 {
+      color: var(--primary);
+      font-weight: bold;
+    }
+ 
+    .section-title p {
+      color: var(--dark);
+    }
+   
+    /* Improved responsive back button using Bootstrap classes */
+    .btn-back {
+      border: 2px solid var(--secondary);
+      color: var(--secondary);
+      background-color: transparent;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      border-radius: 50px;
+      padding: 0.5rem 1rem;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+    }
+ 
+    .btn-back:hover {
+      background-color: var(--secondary);
+      color: white;
+    }
+ 
+    .btn-back svg {
+      transition: transform 0.3s ease;
+      margin-right: 0.5rem;
+      flex-shrink: 0;
+    }
+ 
+    .btn-back:hover svg {
+      transform: translateX(-4px);
+    }
+ 
+    /* Flight info panel */
+    .flight-info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      max-width: 300px;
+    }
+ 
+    .flight-info h4 {
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+ 
+    .flight-info p {
+      margin-bottom: 5px;
+    }
+ 
+    /* Custom red location icon */
+    .red-icon {
+      background-color: red;
+      border-radius: 50%;
+      border: 2px solid white;
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+ 
+    .red-icon::after {
+      content: "";
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 8px solid red;
+    }
+ 
+    /* Flight path styling */
+    .flight-path {
+      stroke: #3498db;
+      stroke-width: 3;
+      stroke-dasharray: 10, 5;
+      fill: none;
+    }
+ 
+    /* Confetti canvas */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      pointer-events: none;
+    }
+ 
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .destination-header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+     
+      .btn-back {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+      }
+     
+      .btn-back span {
+        display: inline; /* Ensure text stays visible */
+      }
+    }
+ 
+    @media (max-width: 576px) {
+      .btn-back span {
+        display: none; /* Hide text on very small screens */
+      }
+     
+      .btn-back svg {
+        margin-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+   <!-- Hero Section with Map -->
+  <section class="hero">
+    <div id="map"></div>
+    <!-- Flight info panel -->
+    <div class="flight-info">
+      <h4>Flight Status</h4>
+      <p><strong>Route:</strong> Chennai (MAA) → <span id="destination-city">Paris</span> (<span id="destination-code">CDG</span>)</p>
+      <p><strong>Distance:</strong> <span id="flight-distance">8,139</span> km</p>
+      <p><strong>Status:</strong> <span id="flight-status">In Flight</span></p>
+    </div>
+  </section>
+ 
+  <div class="container">
+    <!-- Destination Header - Using Bootstrap grid -->
+    <div class="destination-header row align-items-center g-3">
+      <div class="col-md-8">
+        <h1 class="destination-title">{{ destination.name }} Tour</h1>
+        <p class="destination-tagline">{{ destination.tagline }}</p>
+      </div>
+      <div class="col-md-4 text-md-4">
+        <a href="{% url 'all_international' %}" class="btn-back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0-1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"/>
+            <path fill-rule="evenodd" d="M8.354 11.354a.5.5 0 0 1-.708 0L5.5 9.207l-.354.353a.5.5 0 0 1-.708-.707l1.5-1.5a.5.5 0 0 1 .708 0l1.5 1.5a.5.5 0 0 1 0 .707z"/>
+            <path fill-rule="evenodd" d="M11.5 8a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h6a.5.5 0 0 1 .5.5z"/>
+          </svg>
+          <span class="d-none d-sm-inline">Back to All Destinations</span>
+        </a>
+      </div>
+    </div>
+ 
+    <section class="py-5">
+      <div class="container">
+        <div class="text-center mb-5 section-title">
+          <h2>{{ destination.duration }} Itinerary</h2>
+          <p>Explore the charm of {{ destination.name }} day by day</p>
+        </div>
+ 
+        {% for day in destination.itinerary %}
+          <div class="day-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1 }}00">
+            <div class="day-number">Day {{ day.day }}: {{ day.title }}</div>
+            <ul class="mb-3">
+              {% for activity in day.activities %}
+                <li>{{ activity }}</li>
+              {% endfor %}
+            </ul>
+            <div class="highlight-box">
+              <strong>Highlight:</strong> {{ day.highlight }}
+            </div>
+          </div>
+        {% endfor %}
+ 
+        <div class="text-center mt-5">
+          <a href="https://forms.gle/qKpo3btNDZfFWBXs8" class="btn-book">Book This Tour</a>
+        </div>
+      </div>
+    </section>
+  </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bezier-easing@2.1.0/dist/bezier-easing.min.js"></script>
+ 
+  <script>
+    AOS.init();
+ 
+    // Airport codes for major destinations (you can expand this)
+    const AIRPORT_CODES = {
+      "Singapore": "SIN",
+      "Tokyo": "HND",
+      "New York": "JFK",
+      "Paris": "CDG",
+      "Rome": "FCO",
+      "Santorini": "JTR",
+      "Barcelona": "BCN",
+      "Swiss Alps": "ZRH",
+      "Amsterdam": "AMS",
+      "Bali": "DPS",
+      "Dubai": "DXB",
+      "Seoul": "ICN",
+      "Hong Kong": "HKG",
+      "Los Angeles": "LAX",
+      "Machu Picchu": "CUZ",
+      "Rio de Janeiro": "GIG",
+      "Niagara Falls": "YYZ",
+      "Toronto": "YYZ",
+      "Cape Town": "CPT",
+      "Marrakech": "RAK",
+      "Victoria Falls": "VFA",
+      "Maasai Mara": "NBO",
+      "Sydney": "SYD",
+      "Queenstown": "ZQN",
+      "Bora Bora": "BOB",
+      "Iceland": "KEF",
+      "Prague": "PRG",
+      "Kyoto": "UKY",
+      "Cairo": "CAI",
+      "Maldives": "MLE"
+    };
+ 
+    // International destinations coordinates
+    const DESTINATION_COORDINATES = {
+      "Singapore": [1.3521, 103.8198],
+      "Tokyo": [35.6762, 139.6503],
+      "New York": [40.7128, -74.0060],
+      "Paris": [48.8566, 2.3522],
+      "Rome": [41.9028, 12.4964],
+      "Santorini": [36.3932, 25.4615],
+      "Barcelona": [41.3851, 2.1734],
+      "Swiss Alps": [46.5584, 8.5606],
+      "Amsterdam": [52.3676, 4.9041],
+      "Bali": [-8.4095, 115.1889],
+      "Dubai": [25.2048, 55.2708],
+      "Seoul": [37.5665, 126.9780],
+      "Hong Kong": [22.3193, 114.1694],
+      "Los Angeles": [34.0522, -118.2437],
+      "Machu Picchu": [-13.1631, -72.5450],
+      "Rio de Janeiro": [-22.9068, -43.1729],
+      "Niagara Falls": [43.0896, -79.0849],
+      "Toronto": [43.6532, -79.3832],
+      "Cape Town": [-33.9249, 18.4241],
+      "Marrakech": [31.6295, -7.9811],
+      "Victoria Falls": [-17.9243, 25.8572],
+      "Maasai Mara": [-1.5816, 35.4378],
+      "Sydney": [-33.8688, 151.2093],
+      "Queenstown": [-45.0312, 168.6626],
+      "Bora Bora": [-16.5004, -151.7415],
+      "Iceland": [64.9631, -19.0208],
+      "Prague": [50.0755, 14.4378],
+      "Kyoto": [35.0116, 135.7681],
+      "Cairo": [30.0444, 31.2357],
+      "Maldives": [3.2028, 73.2207]
+    };
+ 
+    // Get destination name from page title
+    const destinationName = document.querySelector('.destination-title').textContent.replace(' Tour', '').trim();
+    const destinationCoords = DESTINATION_COORDINATES[destinationName] || [48.8566, 2.3522]; // Default to Paris
+   
+    // Update flight info panel
+    document.getElementById('destination-city').textContent = destinationName;
+    document.getElementById('destination-code').textContent = AIRPORT_CODES[destinationName] || 'XXX';
+   
+    // Initialize the map with a world view
+    const startPoint =  [13.0827, 80.2707]; // Madurai
+    const map = L.map('map').setView([
+      (startPoint[0] + destinationCoords[0]) / 2,
+      (startPoint[1] + destinationCoords[1]) / 2
+    ], 3);
+   
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+ 
+    // Create custom icons
+    const redIcon = L.divIcon({
+      className: 'red-icon',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
+    });
+ 
+    // Add markers
+    L.marker(startPoint).addTo(map).bindPopup("Departure: Chennai (MAA)");
+    const destinationMarker = L.marker(destinationCoords, { icon: redIcon }).addTo(map)
+      .bindPopup(`Destination: ${destinationName} (${AIRPORT_CODES[destinationName] || 'XXX'})`);
+ 
+    // Flight marker setup
+    const flightElement = document.createElement('div');
+    flightElement.className = 'flight-marker';
+    flightElement.innerHTML = `<img src="{% static 'images/flight.png' %}" class="flight-icon" />`;
+ 
+    const flightIcon = L.divIcon({
+      html: flightElement,
+      className: '',
+      iconSize: [48, 48],
+      iconAnchor: [24, 24],
+    });
+ 
+    // Create a smooth curved flight path
+    function createFlightPath(start, end) {
+      // Calculate midpoint with some altitude for the curve
+      const midLat = (start[0] + end[0]) / 2;
+      const midLng = (start[1] + end[1]) / 2;
+     
+      // Add some curvature to the path (adjust the 0.3 factor to change curve intensity)
+      const curveFactor = 0.3;
+      const ctrlLat = midLat + curveFactor * (end[0] - start[0]);
+      const ctrlLng = midLng + curveFactor * (end[1] - start[1]);
+     
+      // Create a bezier curve with 100 points
+      const path = [];
+      const steps = 100;
+     
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        // Quadratic bezier curve
+        const lat = (1-t)*(1-t)*start[0] + 2*(1-t)*t*ctrlLat + t*t*end[0];
+        const lng = (1-t)*(1-t)*start[1] + 2*(1-t)*t*ctrlLng + t*t*end[1];
+        path.push([lat, lng]);
+      }
+     
+      return path;
+    }
+ 
+    // Create the flight path
+    const flightPath = createFlightPath(startPoint, destinationCoords);
+   
+    // Calculate distance for flight info
+    const distance = calculateDistance(startPoint[0], startPoint[1], destinationCoords[0], destinationCoords[1]);
+    document.getElementById('flight-distance').textContent = Math.round(distance).toLocaleString();
+   
+    // Draw the flight path
+    L.polyline(flightPath, {
+      color: '#3498db',
+      weight: 3,
+      dashArray: '10, 5',
+      className: 'flight-path'
+    }).addTo(map);
+ 
+    // Animation variables
+    let currentPosition = 0;
+    let currentSpeed = 0;
+    const targetSpeed = 0.5;
+    const acceleration = 0.005;
+    let animationId = null;
+    let lastAngle = 0;
+    const angleSmoothingFactor = 0.2;
+    let lastFrameTime = 0;
+    const targetFPS = 60;
+    let hasReachedDestination = false;
+ 
+    const flightMarker = L.marker(startPoint, { icon: flightIcon }).addTo(map);
+ 
+    // Start the flight
+    startFlight();
+ 
+    function startFlight() {
+      document.getElementById('flight-status').textContent = "In Flight";
+      lastFrameTime = 0;
+      animationId = requestAnimationFrame(animateFlight);
+    }
+ 
+    function animateFlight(timestamp) {
+      if (!lastFrameTime) lastFrameTime = timestamp;
+      const deltaTime = timestamp - lastFrameTime;
+     
+      if (deltaTime >= 1000 / targetFPS) {
+          lastFrameTime = timestamp;
+         
+          // Speed control
+          if (currentSpeed < targetSpeed) {
+              currentSpeed = Math.min(currentSpeed + acceleration, targetSpeed);
+          }
+         
+          currentPosition += currentSpeed / 1000;
+         
+          if (currentPosition >= 1) {
+              currentPosition = 1;
+              currentSpeed = 0;
+              updateFlightPosition(currentPosition);
+              if (!hasReachedDestination) {
+                document.getElementById('flight-status').textContent = "Arrived";
+                triggerConfetti();
+                hasReachedDestination = true;
+              }
+              return;
+          }
+         
+          updateFlightPosition(currentPosition);
+      }
+     
+      animationId = requestAnimationFrame(animateFlight);
+    }
+ 
+    function updateFlightPosition(progress) {
+      const exactIndex = progress * (flightPath.length - 1);
+      const index = Math.floor(exactIndex);
+      const nextIndex = Math.min(index + 1, flightPath.length - 1);
+      const partialProgress = exactIndex % 1;
+ 
+      // Linear interpolation for smooth movement
+      const currentPoint = flightPath[index];
+      const nextPoint = flightPath[nextIndex];
+     
+      const lat = currentPoint[0] + (nextPoint[0] - currentPoint[0]) * partialProgress;
+      const lng = currentPoint[1] + (nextPoint[1] - currentPoint[1]) * partialProgress;
+ 
+      // Update flight position
+      flightMarker.setLatLng([lat, lng]);
+     
+      // Calculate angle between current and next point
+      const rawAngle = calculateAngle(currentPoint, nextPoint);
+      const smoothedAngle = lastAngle + angleSmoothingFactor * (rawAngle - lastAngle);
+      lastAngle = smoothedAngle;
+     
+      // Update flight rotation
+      flightElement.style.setProperty('--rotation', `${smoothedAngle}deg`);
+     
+      // Smooth panning
+      const bounds = map.getBounds();
+      if (!bounds.contains([lat, lng])) {
+          map.panTo([lat, lng], { animate: true, duration: 0.5 });
+      }
+    }
+ 
+    function calculateAngle(currentPos, nextPos) {
+      const dx = nextPos[1] - currentPos[1];
+      const dy = nextPos[0] - currentPos[0];
+      return Math.atan2(dx, dy) * 180 / Math.PI;
+    }
+ 
+    // Haversine formula for distance calculation
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth's radius in km
+      const dLat = deg2rad(lat2 - lat1);
+      const dLon = deg2rad(lon2 - lon1);
+      const a =
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+ 
+    function deg2rad(deg) {
+      return deg * (Math.PI/180);
+    }
+ 
+    function triggerConfetti() {
+      // Get the destination position on screen
+      const destPoint = map.latLngToContainerPoint(destinationMarker.getLatLng());
+      const x = destPoint.x / map.getSize().x;
+      const y = destPoint.y / map.getSize().y;
+     
+      // Confetti configuration
+      const colors = ['#8e44ad', '#e67e22', '#27ae60', '#3498db', '#f1c40f'];
+     
+      // Create confetti effect
+      const end = Date.now() + 3000; // 3 seconds of confetti
+     
+      (function frame() {
+        // Launch from left side
+        confetti({
+          particleCount: 5,
+          angle: 60,
+          spread: 55,
+          origin: { x, y },
+          colors: colors
+        });
+       
+        // Launch from right side
+        confetti({
+          particleCount: 5,
+          angle: 120,
+          spread: 55,
+          origin: { x, y },
+          colors: colors
+        });
+       
+        // Launch from bottom
+        confetti({
+          particleCount: 5,
+          angle: -90,
+          spread: 55,
+          origin: { x, y },
+          colors: colors
+        });
+       
+        // Continue if we're not done yet
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+       
+        // Open destination popup
+        destinationMarker.openPopup();
+      }());
+    }
+  </script>
+</body>
+</html>
+{% endblock %}

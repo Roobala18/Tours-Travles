@@ -1,0 +1,326 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car Tours & Travels</title>
+{% comment %} <link rel="stylesheet" href="{% static "style.css" %}"> {% endcomment %}
+  <!-- Bootstrap and Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+   
+   body {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    {% comment %} p {
+      text-align: justify;
+    } {% endcomment %}
+
+    /* Navbar */
+    .navbar {
+      background: linear-gradient(744deg, #af40ff, #a9a1dc 60%, #05e7f7);
+    }
+
+    .navbar-brand {
+      font-weight: bold;
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    .navbar-brand img {
+      max-height: 60px;
+      max-width: 100%;
+    }
+
+    .navbar-brand span {
+      font-size: 1.2rem;
+      white-space: nowrap;
+    }
+
+.nav-link {
+  position: relative;
+  display: inline-block;
+  color: white;
+  font-weight: 500;
+  padding-bottom: 5px;
+  text-decoration: none;
+  transition: color 0.3s ease-in-out;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  height: 2px;
+  background-color: white;
+  transition: width 0.3s ease-in-out;
+}
+
+
+.nav-link:hover::after {
+  width: 100%;
+  color:white;
+}
+.nav-link.dropdown-toggle::after {
+    display: none !important;
+}
+.nav-link.dropdown-toggle::after:hover {
+   width: 100%;
+  color:white;
+}
+.dropdown:hover .dropdown-menu {
+        display: block;
+        margin-top: 10px;
+      }
+
+
+
+
+    @media (min-width: 992px) {
+      .dropdown:hover .dropdown-menu {
+        display: block;
+        margin-top: 10px;
+      }
+    }
+
+    .dropdown-menu {
+      transition: all 0.3s ease;
+      
+      
+      
+    }
+
+    .dropdown-item:hover {
+      background-color: rgb(192, 113, 249);
+      color: #000;
+    }
+
+    .btn {
+      background: linear-gradient(744deg, #af40ff, #a9a1dc 60%, #05e7f7);
+      color: white;
+    }
+
+    .btn:hover {
+      background-image: linear-gradient(120deg, rgb(175, 224, 61) 0%, rgb(117, 240, 134) 100%);
+    }
+
+    /* Footer */
+    footer {
+      background-color: #1e1e1e;
+      color: #fff;
+      padding: 3rem 0 1rem;
+    }
+
+    footer h5 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    footer p, footer a {
+      font-size: 0.95rem;
+      color: #ccc;
+      text-align: justify;
+    }
+
+    footer a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    footer ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    footer ul li {
+      margin-bottom: 0.5rem;
+    }
+
+    footer .social-icons a {
+      color: #ccc;
+      font-size: 1.2rem;
+      margin-right: 15px;
+      transition: 0.3s;
+    }
+
+    footer .social-icons a:hover {
+      color: #fff;
+    }
+    footer .contact-item {
+    display: flex;
+    justify-content:center;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+footer .contact-item i {
+    margin-right: 10px;
+    font-size: 1rem;
+    color: #ccc;
+}
+
+
+    @media (max-width: 768px) {
+      footer .text-md-start {
+        text-align: center !important;
+      }
+
+      footer .social-icons {
+        justify-content: center;
+      }
+      
+ .dropdown-menu{
+        background-color:transparent;
+        border:none;
+      
+      }
+      .dropdown-item:hover{
+        background-color:transparent;
+        color:white;
+      }  
+      
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top p-3">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+      {% comment %} <img src="{% static 'images/logo1.png' %}" class="img-fluid me-2" alt="Logo"> {% endcomment %}
+      <span class="text-white">Kumaran Travels</span>
+    </a>
+    <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav text-center">
+        <li class="nav-item">
+         <a class="nav-link" href="{% url 'home' %}">Home</a>
+
+
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="domesticDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Domestic Packages
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="domesticDropdown" data-bs-auto-close="outside">
+            <li><a class="dropdown-item text-center" href="{% url 'domestic' %}">Tamil Nadu</a></li>
+            <li><a class="dropdown-item text-center" href="{% url 'kerala' %}">Kerala</a></li>
+            <li><a class="dropdown-item text-center" href="{% url 'karnataka' %}">Karnataka</a></li>
+            <li><a class="dropdown-item text-center" href="{% url 'andra' %}">Andra</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'international' %}">International Packages</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'about' %}">About Us</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'contact' %}">Contact Us</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main>
+  {% block content %}
+  {% endblock %}
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row text-center text-md-center">
+      <div class="col-md-4 mb-4">
+        <h5>About Us</h5>
+        <p>
+          We offer safe, comfortable, and reliable travel solutions for local, outstation, airport, and corporate needs across Tamil Nadu and beyond. Our goal is to make your journey memorable and hassle-free.
+        </p>
+      </div>
+      <div class="col-md-4 mb-4">
+        <h5>Quick Links</h5>
+        <ul>
+          <li><a href="{% url 'home' %}">Home</a></li>
+          <li><a href="{% url 'domestic' %}">Domestic Packages</a></li>
+          <li><a href="{% url 'international' %}">International Packages</a></li>
+          <li><a href="{% url 'about' %}">About Us</a></li>
+          <li><a href="{% url 'contact' %}">Contact Us</a></li>
+        </ul>
+      </div>
+<div class="col-md-4 mb-4">
+  <h5>Contact</h5>
+  <div class="contact-item">
+    <i class="bi bi-geo-alt-fill"></i>
+    <span>123, Anna Nagar, Madurai, Tamil Nadu</span>
+  </div>
+  <div class="contact-item">
+    <i class="bi bi-telephone-fill"></i>
+    <span>+91 98765 43210</span>
+  </div>
+  <div class="contact-item">
+    <i class="bi bi-envelope-fill"></i>
+    <span>info@carrentaltours.com</span>
+  </div>
+</div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const navLinks = document.querySelectorAll(".nav-link");
+  const navbarToggler = document.querySelector(".navbar-toggler");
+  const navbarCollapse = document.querySelector("#navbarNav");
+
+  navLinks.forEach(function (link) {
+    link.addEventListener("click", function () {
+      // Only collapse if it's visible (mobile)
+      if (window.innerWidth < 992 && navbarToggler.offsetParent !== null) {
+        new bootstrap.Collapse(navbarCollapse).hide();
+      }
+    });
+  });
+});
+</script>
+ <script>
+    document.querySelectorAll('.dropdown').forEach(function (dropdown) {
+        let timeout;
+
+        dropdown.addEventListener('mouseenter', function () {
+            clearTimeout(timeout);
+            const menu = this.querySelector('.dropdown-menu');
+            menu.classList.add('show');
+        });
+
+        dropdown.addEventListener('mouseleave', function () {
+            const menu = this.querySelector('.dropdown-menu');
+            // Add delay before hiding
+            timeout = setTimeout(() => {
+                menu.classList.remove('show');
+            }, 300); // 300ms delay
+        });
+    });
+</script>
+
+</body>
+</html>
