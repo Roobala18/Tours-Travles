@@ -223,7 +223,7 @@
       }
     }
 
-            
+          
 .e-card {
   margin:20px auto;
   background: transparent;
@@ -309,7 +309,9 @@
     transform: rotate(360deg);
   }
 }
-
+.cardswiper{
+  z-index:1;
+}
 .service-card {
     height:400px;
     overflow: hidden;
@@ -317,6 +319,8 @@
     transition: transform 0.3s ease, border-top 0.3s ease;
     border-top: 5px solid transparent;
     background-color: white;
+    z-index:1;
+    
 }
 
 .service-card:hover {
@@ -352,6 +356,7 @@ h2 {
     transition: transform 0.4s ease, box-shadow 0.4s ease;
     border-radius: 12px;
     overflow: hidden;
+    
   }
 
   .car-card:hover {
@@ -604,7 +609,145 @@ h2 {
         transform: translateX(200%);
       }
     }
-        
+      
+  .side-panel {
+      position: fixed;
+      top: 50px;
+      left: 0;
+      width: 300px;
+      height: 75%;
+      background: white;
+      box-shadow:  0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateX(-100%);
+      transition: transform 0.4s ease;
+      z-index: 1000;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .side-panel.active {
+      transform: translateX(0);
+    }
+
+    /* Panel Content */
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+   
+    /* Tab Button */
+    .tab-button {
+      position: absolute;
+      top: 40%;
+      right: -40px;
+      width: 40px;
+      height: 100px;
+      background: linear-gradient(#4361ee, #3f37c9);
+      color: white;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      text-align: center;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      z-index: 1001;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tab-button img{
+          transform: rotate(270deg);
+    position: absolute;
+    top:30%;
+    right: 10px;
+    
+    }
+
+    /* Panel Header */
+    .panel-header {
+      margin-bottom: 15px;
+    }
+
+    .panel-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #2b2d42;
+      position: relative;
+      padding-bottom: 8px;
+    }
+
+    .panel-header h3::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 40px;
+      height: 2px;
+      background: #4895ef;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #2b2d42;;
+    }
+
+    .side-panel input {
+      width: 85% ;
+      padding: 8px 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+.side-panel select{
+   width: 93% ;
+      padding: 8px 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 13px;
+      transition: all 0.2s ease;
+}
+    .side-panel input:focus, 
+    .side-panel select:focus {
+      outline: none;
+      border-color: #4895ef;
+      box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.1);
+    }
+
+    .side-panel button {
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(to right, #4361ee, #3f37c9);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+
+   
+  
+
         @media (max-width: 768px) {
             .section-header h2 {
                 font-size: 2rem;
@@ -767,7 +910,7 @@ h2 {
 </section>
 <!--services-->
 <section class="py-5 bg-light">
-    <div class="container text-center">
+    <div class="container text-center cardswiper">
         <h2 class="mb-4" data-aos="fade-up">Our Services</h2>
         <div class="swiper mySwiper" data-aos="zoom-in-up">
             <div class="swiper-wrapper">
@@ -997,6 +1140,64 @@ h2 {
 
 </div>
     
+<!-- Slide Panel -->
+  <div class="side-panel" id="panel">
+ 
+    
+    <!-- Panel Header -->
+    <div class="panel-header">
+      <h3>Quick Enquiry</h3>
+    </div>
+
+    <!-- Content -->
+    <div class="panel-content">
+      <form onsubmit="sendToWhatsApp(event)">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" required pattern="[0-9]{10}">
+        </div>
+
+        <div class="form-group">
+          <label for="destination">Destination</label>
+          <input type="text" id="destination" required>
+        </div>
+
+        <div class="form-group">
+          <label for="days">Days</label>
+          <input type="number" id="days" required min="1">
+        </div>
+
+        <div class="form-group">
+          <label for="members">People</label>
+          <input type="number" id="members" required min="1">
+        </div>
+
+        <div class="form-group">
+          <label for="car">Vehicle</label>
+          <select id="car" required>
+            <option value="">Select</option>
+            <option value="Sedan">Sedan</option>
+            <option value="SUV">SUV</option>
+            <option value="Innova">Innova</option>
+            <option value="Traveller">Tempo</option>
+          </select>
+        </div>
+
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+    
+    <!-- Toggle Button -->
+    <div class="tab-button" onclick="togglePanel()">Enquire
+      <img src="{% static 'images/car1-removebg-preview' %}" width="90px">
+    </div>
+  </div>
+
 
 <!-- Swiper JS -->
 <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
@@ -1125,6 +1326,105 @@ h2 {
       updateCounter();
     });
 </script>
+{% comment %} 
+<script>
+  const panel = document.getElementById("panel");
 
+  function togglePanel() {
+    panel.classList.toggle("active");
+  }
+
+
+  document.addEventListener("click", function(event) {
+    const isClickInside = panel.contains(event.target);
+
+    if (!isClickInside && panel.classList.contains("active")) {
+      panel.classList.remove("active");
+    }
+  });
+
+function sendToWhatsApp(event) {
+  event.preventDefault();
+
+  // Collect all field values
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const whatsapp = document.getElementById("whatsapp").value;
+  const phone = document.getElementById("phone").value;
+  const destination = document.getElementById("destination").value;
+  const days = document.getElementById("days").value;
+  const members = document.getElementById("members").value;
+  const car = document.getElementById("car").value;
+
+  // Compose WhatsApp message
+  const message = `Tour Package Enquiry:
+Name: ${name}
+Email: ${email}
+Phone: ${phone}
+WhatsApp: ${whatsapp}
+Destination: ${destination}
+Days: ${days}
+Members: ${members}
+Car: ${car}`;
+
+  // Change this to your business WhatsApp number (with country code, no +)
+  const whatsappNumber = "9185082297XX";
+
+  // Encode and redirect
+  const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank'); // Open in new tab
+
+    event.target.reset();
+}
+</script> {% endcomment %}
+
+  <script>
+    const panel = document.getElementById("panel");
+
+    function togglePanel() {
+      panel.classList.toggle("active");
+    }
+
+    document.addEventListener("click", function(event) {
+      const isClickInside = panel.contains(event.target);
+      const isTabButton = event.target.classList.contains('tab-button');
+
+      if (!isClickInside && !isTabButton && panel.classList.contains("active")) {
+        panel.classList.remove("active");
+      }
+    });
+
+    function sendToWhatsApp(event) {
+      event.preventDefault();
+
+      // Collect all field values
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+      const destination = document.getElementById("destination").value;
+      const days = document.getElementById("days").value;
+      const members = document.getElementById("members").value;
+      const car = document.getElementById("car").value;
+
+      // Compose WhatsApp message
+      const message = `Tour Enquiry:
+Name: ${name}
+Phone: ${phone}
+Destination: ${destination}
+Days: ${days}
+People: ${members}
+Vehicle: ${car}`;
+
+      // Change this to your business WhatsApp number
+      const whatsappNumber = "9185082297XX";
+
+      // Encode and redirect
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+
+      // Reset form
+      event.target.reset();
+      panel.classList.remove("active");
+    }
+  </script>
 
 {% endblock %}

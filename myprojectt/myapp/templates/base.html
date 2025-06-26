@@ -1,29 +1,24 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Car Tours & Travels</title>
-{% comment %} <link rel="stylesheet" href="{% static "style.css" %}"> {% endcomment %}
+
   <!-- Bootstrap and Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-   
-   body {
+    body {
       font-family: 'Poppins', sans-serif;
     }
-
-    {% comment %} p {
-      text-align: justify;
-    } {% endcomment %}
 
     /* Navbar */
     .navbar {
@@ -46,64 +41,129 @@
       white-space: nowrap;
     }
 
-.nav-link {
-  position: relative;
-  display: inline-block;
-  color: white;
-  font-weight: 500;
-  padding-bottom: 5px;
-  text-decoration: none;
-  transition: color 0.3s ease-in-out;
-}
+    .nav-link {
+      position: relative;
+      display: inline-block;
+      color: white;
+      font-weight: 500;
+      padding-bottom: 5px;
+      text-decoration: none;
+      transition: color 0.3s ease-in-out;
+    }
 
-.nav-link::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 0%;
-  height: 2px;
-  background-color: white;
-  transition: width 0.3s ease-in-out;
-}
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0%;
+      height: 2px;
+      background-color: white;
+      transition: width 0.3s ease-in-out;
+    }
 
+    .nav-link:hover::after {
+      width: 100%;
+      color: white;
+    }
 
-.nav-link:hover::after {
-  width: 100%;
-  color:white;
-}
-.nav-link.dropdown-toggle::after {
-    display: none !important;
-}
-.nav-link.dropdown-toggle::after:hover {
-   width: 100%;
-  color:white;
-}
-.dropdown:hover .dropdown-menu {
-        display: block;
-        margin-top: 10px;
-      }
+    .dropdown-toggle::after {
+      display: inline-block;
+      margin-left: 0.255em;
+      vertical-align: 0.255em;
+      content: "";
+      border-top: 0.3em solid;
+      border-right: 0.3em solid transparent;
+      border-bottom: 0;
+      border-left: 0.3em solid transparent;
+      display: none !important;
+    }
+    
+  @keyframes bounce {
 
+    0%,
+    100% {
+      transform: translateY(0);
+    }
 
+    50% {
+      transform: translateY(-10px);
+    }
+  }
 
+  .whatsapp-float {
+    position: fixed;
+    bottom: 100px;
+    right: 10px;
+    z-index: 0;
+    background-color: #25D366;
+    color: white;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    animation: bounce 1.5s infinite;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: background 0.3s;
+  }
+
+  .whatsapp-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 15px;
+    height: 12px;
+    background-color: #ff0000;
+    border-radius: 50%;
+    border: 2px solid #25D366;
+  }
+
+  
 
     @media (min-width: 992px) {
-      .dropdown:hover .dropdown-menu {
+      .dropdown-menu {
+        display: none;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+      }
+
+      .dropdown:hover>.dropdown-menu {
         display: block;
-        margin-top: 10px;
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+
+      .dropdown-item {
+        text-align: center;
+      }
+
+      .dropdown-item:hover {
+        background-color: rgb(192, 113, 249);
+        color: #000;
       }
     }
 
-    .dropdown-menu {
-      transition: all 0.3s ease;
+    /* Mobile dropdown styles */
+    @media (max-width: 991.98px) {
+      .dropdown-menu {
+        background-color: rgba(0, 0, 0, 0.2);
+        border: none;
+      }
       
+      .dropdown-item {
+        color: white;
+        text-align: center;
+      }
       
-      
-    }
-
-    .dropdown-item:hover {
-      background-color: rgb(192, 113, 249);
-      color: #000;
+      .dropdown-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
     }
 
     .btn {
@@ -120,6 +180,7 @@
       background-color: #1e1e1e;
       color: #fff;
       padding: 3rem 0 1rem;
+      z-index: 999;
     }
 
     footer h5 {
@@ -129,7 +190,8 @@
       font-weight: 600;
     }
 
-    footer p, footer a {
+    footer p,
+    footer a {
       font-size: 0.95rem;
       color: #ccc;
       text-align: justify;
@@ -148,6 +210,10 @@
     footer ul li {
       margin-bottom: 0.5rem;
     }
+    
+    footer ul li a{
+      text-decoration: none;
+    }
 
     footer .social-icons a {
       color: #ccc;
@@ -159,20 +225,20 @@
     footer .social-icons a:hover {
       color: #fff;
     }
+
     footer .contact-item {
-    display: flex;
-    justify-content:center;
-    align-items: center;
-    margin-bottom: 10px;
-    font-size: 0.95rem;
-}
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
 
-footer .contact-item i {
-    margin-right: 10px;
-    font-size: 1rem;
-    color: #ccc;
-}
-
+    footer .contact-item i {
+      margin-right: 10px;
+      font-size: 1rem;
+      color: #ccc;
+    }
 
     @media (max-width: 768px) {
       footer .text-md-start {
@@ -182,145 +248,133 @@ footer .contact-item i {
       footer .social-icons {
         justify-content: center;
       }
-      
- .dropdown-menu{
-        background-color:transparent;
-        border:none;
-      
-      }
-      .dropdown-item:hover{
-        background-color:transparent;
-        color:white;
-      }  
-      
     }
   </style>
 </head>
+
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top p-3">
-  <div class="container-fluid px-4">
-    <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-      {% comment %} <img src="{% static 'images/logo1.png' %}" class="img-fluid me-2" alt="Logo"> {% endcomment %}
-      <span class="text-white">Kumaran Travels</span>
-    </a>
-    <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-      <ul class="navbar-nav text-center">
-        <li class="nav-item">
-         <a class="nav-link" href="{% url 'home' %}">Home</a>
-
-
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="domesticDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Domestic Packages
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="domesticDropdown" data-bs-auto-close="outside">
-            <li><a class="dropdown-item text-center" href="{% url 'domestic' %}">Tamil Nadu</a></li>
-            <li><a class="dropdown-item text-center" href="{% url 'kerala' %}">Kerala</a></li>
-            <li><a class="dropdown-item text-center" href="{% url 'karnataka' %}">Karnataka</a></li>
-            <li><a class="dropdown-item text-center" href="{% url 'andra' %}">Andra</a></li>
-          </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'international' %}">International Packages</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'about' %}">About Us</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'contact' %}">Contact Us</a>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
-
-<!-- Main Content -->
-<main>
-  {% block content %}
-  {% endblock %}
-</main>
-
-<!-- Footer -->
-<footer>
-  <div class="container">
-    <div class="row text-center text-md-center">
-      <div class="col-md-4 mb-4">
-        <h5>About Us</h5>
-        <p>
-          We offer safe, comfortable, and reliable travel solutions for local, outstation, airport, and corporate needs across Tamil Nadu and beyond. Our goal is to make your journey memorable and hassle-free.
-        </p>
-      </div>
-      <div class="col-md-4 mb-4">
-        <h5>Quick Links</h5>
-        <ul>
-          <li><a href="{% url 'home' %}">Home</a></li>
-          <li><a href="{% url 'domestic' %}">Domestic Packages</a></li>
-          <li><a href="{% url 'international' %}">International Packages</a></li>
-          <li><a href="{% url 'about' %}">About Us</a></li>
-          <li><a href="{% url 'contact' %}">Contact Us</a></li>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light shadow-sm sticky-top p-3">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+        {% comment %} <img src="{% static 'images/logo1.png' %}" class="img-fluid me-2" alt="Logo"> {% endcomment %}
+        <span class="text-white">Kumaran Travels</span>
+      </a>
+      <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav text-center">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'home' %}">Home</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="domesticDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Domestic Packages
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="domesticDropdown">
+              <li><a class="dropdown-item" href="{% url 'domestic' %}">Tamil Nadu</a></li>
+              <li><a class="dropdown-item" href="{% url 'kerala' %}">Kerala</a></li>
+              <li><a class="dropdown-item" href="{% url 'karnataka' %}">Karnataka</a></li>
+              <li><a class="dropdown-item" href="{% url 'andra' %}">Andra</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'international' %}">International Packages</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'about' %}">About Us</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'contact' %}">Contact Us</a>
+          </li>
         </ul>
       </div>
-<div class="col-md-4 mb-4">
-  <h5>Contact</h5>
-  <div class="contact-item">
-    <i class="bi bi-geo-alt-fill"></i>
-    <span>123, Anna Nagar, Madurai, Tamil Nadu</span>
-  </div>
-  <div class="contact-item">
-    <i class="bi bi-telephone-fill"></i>
-    <span>+91 98765 43210</span>
-  </div>
-  <div class="contact-item">
-    <i class="bi bi-envelope-fill"></i>
-    <span>info@carrentaltours.com</span>
-  </div>
-</div>
-</footer>
+    </div>
+  </nav>
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Main Content -->
+  <main>
+    {% block content %}
+    {% endblock %}
+  </main>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const navLinks = document.querySelectorAll(".nav-link");
-  const navbarToggler = document.querySelector(".navbar-toggler");
-  const navbarCollapse = document.querySelector("#navbarNav");
+  <a href="https://wa.me/918508229704?text=Hello%2C%20I%20am%20interested%20in%20your%20tour%20packages."
+  class="whatsapp-float" target="_blank" title="Chat with us on WhatsApp">
+  <i class="bi bi-whatsapp"></i>
+  <span class="whatsapp-badge"></span>
+</a>
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row text-center text-md-center">
+        <div class="col-md-4 mb-4">
+          <h5>About Us</h5>
+          <p>
+            We offer safe, comfortable, and reliable travel solutions for local, outstation, airport, and corporate
+            needs across Tamil Nadu and beyond. Our goal is to make your journey memorable and hassle-free.
+          </p>
+        </div>
+        <div class="col-md-4 mb-4 footerlinks">
+          <h5>Quick Links</h5>
+          <ul>
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'domestic' %}">Domestic Packages</a></li>
+            <li><a href="{% url 'international' %}">International Packages</a></li>
+            <li><a href="{% url 'about' %}">About Us</a></li>
+            <li><a href="{% url 'contact' %}">Contact Us</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4 mb-4">
+          <h5>Contact</h5>
+          <div class="contact-item">
+            <i class="bi bi-geo-alt-fill"></i>
+            <span>123, Anna Nagar, Madurai, Tamil Nadu</span>
+          </div>
+          <div class="contact-item">
+            <i class="bi bi-telephone-fill"></i>
+            <span>+91 98765 43210</span>
+          </div>
+          <div class="contact-item">
+            <i class="bi bi-envelope-fill"></i>
+            <span>info@carrentaltours.com</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
 
-  navLinks.forEach(function (link) {
-    link.addEventListener("click", function () {
-      // Only collapse if it's visible (mobile)
-      if (window.innerWidth < 992 && navbarToggler.offsetParent !== null) {
-        new bootstrap.Collapse(navbarCollapse).hide();
-      }
-    });
-  });
-});
-</script>
- <script>
-    document.querySelectorAll('.dropdown').forEach(function (dropdown) {
-        let timeout;
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-        dropdown.addEventListener('mouseenter', function () {
-            clearTimeout(timeout);
-            const menu = this.querySelector('.dropdown-menu');
-            menu.classList.add('show');
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const navLinks = document.querySelectorAll(".nav-link:not(.dropdown-toggle)");
+      const dropdownItems = document.querySelectorAll(".dropdown-item");
+      const navbarToggler = document.querySelector(".navbar-toggler");
+      const navbarCollapse = document.querySelector("#navbarNav");
+      
+      // Close navbar when clicking regular nav links (not dropdown toggle)
+      navLinks.forEach(function (link) {
+        link.addEventListener("click", function () {
+          if (window.innerWidth < 992 && navbarToggler.offsetParent !== null) {
+            const bsCollapse = new bootstrap.Collapse(navbarCollapse);
+            bsCollapse.hide();
+          }
         });
-
-        dropdown.addEventListener('mouseleave', function () {
-            const menu = this.querySelector('.dropdown-menu');
-            // Add delay before hiding
-            timeout = setTimeout(() => {
-                menu.classList.remove('show');
-            }, 300); // 300ms delay
+      });
+      
+      // Close navbar when clicking dropdown items
+      dropdownItems.forEach(function (item) {
+        item.addEventListener("click", function () {
+          if (window.innerWidth < 992 && navbarToggler.offsetParent !== null) {
+            const bsCollapse = new bootstrap.Collapse(navbarCollapse);
+            bsCollapse.hide();
+          }
         });
+      });
     });
-</script>
-
+  </script>
 </body>
 </html>
