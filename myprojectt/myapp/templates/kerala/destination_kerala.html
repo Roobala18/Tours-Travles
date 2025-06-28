@@ -1,1353 +1,1837 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block content %}
+{% extends 'base.html' %} {% load static %} {% block content %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{{ destination.name }} Tour Itinerary</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ destination.name }} Tour Itinerary</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+      :root {
+        --primary: #8e44ad;
+        --secondary: #e67e22;
+        --accent: #27ae60;
+        --light: #f5f6fa;
+        --dark: #2c3e50;
+        --text: #34495e;
+      }
 
-  <style>
-    :root {
-      --primary: #8e44ad;
-      --secondary: #e67e22;
-      --accent: #27ae60;
-      --light: #f5f6fa;
-      --dark: #2c3e50;
-      --text: #34495e;
-    }
+      body {
+        background-image: url("{% static 'images/features-background1.jpg' %}");
+        color: var(--text);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
 
-    body {
-      background-image: url("{% static 'images/features-background1.jpg' %}");
-      color: var(--text);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+      .hero {
+        position: relative;
+        height: 60vh;
+        overflow: hidden;
+        margin-bottom: 2rem;
+      }
 
-    .hero {
-      position: relative;
-      height: 60vh;
-      overflow: hidden;
-      margin-bottom: 2rem;
-    }
-    
-    #map {
-      height: 100%;
-      width: 100%;
-      z-index: 1;
-    }
-    
-    .destination-header {
-      margin-bottom: 2rem;
-    }
-    
-    .destination-title {
-      color: var(--primary);
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    
-    .destination-tagline {
-      color: var(--dark);
-      font-size: 1.2rem;
-    }
-    
-    .car-marker {
-      position: relative;
-      transform-origin: center;
-      transition: transform 0.2s ease-out;
-    }
+      #map {
+        height: 100%;
+        width: 100%;
+        z-index: 1;
+      }
 
-    .car-marker img {
-      width: 48px;
-      height: 48px;
-      transform-origin: center center;
-      filter: drop-shadow(0 0 5px rgba(0,0,0,0.3));
-      animation: bounce 0.5s infinite alternate;
-    }
-    
-    @keyframes bounce {
-      from { transform: translateY(0) rotate(var(--rotation)); }
-      to { transform: translateY(-1px) rotate(var(--rotation)); }
-    }
+      .destination-header {
+        margin-bottom: 2rem;
+      }
 
-    .day-card {
-      border-left: 5px solid var(--primary);
-      background-color: white;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-      margin-bottom: 40px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+      .destination-title {
+        color: var(--primary);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
 
-    .day-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
+      .destination-tagline {
+        color: var(--dark);
+        font-size: 1.2rem;
+      }
 
-    .day-number {
-      font-size: 1.6rem;
-      font-weight: bold;
-      color: var(--primary);
-      margin-bottom: 12px;
-    }
+      .car-marker {
+        transform-origin: center center; /* Ensure rotation from center */
+        width: 32px;
+        height: 32px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
 
-    .highlight-box {
-      background-color: rgba(231, 76, 60, 0.05);
-      border-left: 4px solid var(--secondary);
-      padding: 15px;
-      border-radius: 5px;
-      margin-top: 15px;
-      color: var(--dark);
-      font-style: italic;
-    }
+      .car-marker img {
+        width: 48px;
+        height: 48px;
+        transform-origin: center center;
+        filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.3));
+        animation: bounce 0.5s infinite alternate;
+      }
 
-    .btn-book {
-      background: var(--primary);
-      color: white;
-      padding: 12px 28px;
-      font-size: 1.1rem;
-      border-radius: 50px;
-      border: none;
-      text-decoration: none;
-      transition: background 0.3s;
-    }
+      @keyframes bounce {
+        from {
+          transform: translateY(0) rotate(var(--rotation));
+        }
+        to {
+          transform: translateY(-1px) rotate(var(--rotation));
+        }
+      }
 
-    .btn-book:hover {
-      background: var(--secondary);
-    }
+      .day-card {
+        border-left: 5px solid var(--primary);
+        background-color: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 40px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
 
-    .section-title h2 {
-      color: var(--primary);
-      font-weight: bold;
-    }
+      .day-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
 
-    .section-title p {
-      color: var(--dark);
-    }
-    
-    .custom-back-btn {
-      
-      color: white;
-      background-color: transparent;
-      transition: all 0.3s ease;
-      font-weight: 500;
-      border-radius: 50px;
-      padding: 8px 20px;
-    }
+      .day-number {
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: 12px;
+      }
 
-    .custom-back-btn:hover {
-      background-color: var(--secondary);
-      color: white;
-    }
+      .highlight-box {
+        background-color: rgba(231, 76, 60, 0.05);
+        border-left: 4px solid var(--secondary);
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 15px;
+        color: var(--dark);
+        font-style: italic;
+      }
 
-    .custom-back-btn svg {
-      transition: transform 0.3s ease;
-    }
+      .btn-book {
+        background: linear-gradient(744deg, #af40ff, #a9a1dc 60%, #05e7f7);
+        color: white;
+        padding: 12px 28px;
+        font-size: 1.1rem;
+        border-radius: 50px;
+        border: none;
+        text-decoration: none;
+        transition: background 0.3s;
+      }
 
-    .custom-back-btn:hover svg {
-      transform: translateX(-4px);
-    }
+      .btn-book:hover {
+        background-image: linear-gradient(
+          120deg,
+          rgb(175, 224, 61) 0%,
+          rgb(117, 240, 134) 100%
+        );
+      }
 
-    /* Route selector styles */
-    .route-selector {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 1000;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
+      .section-title h2 {
+        color: var(--primary);
+        font-weight: bold;
+      }
 
-    .route-selector select {
-      padding: 5px 10px;
-      border-radius: 4px;
-      border: 1px solid #ddd;
-    }
+      .section-title p {
+        color: var(--dark);
+      }
 
-    /* Custom red location icon */
-    .red-icon {
-      background-color: red;
-      border-radius: 50%;
-      border: 2px solid white;
-      width: 20px;
-      height: 20px;
-      display: block;
-    }
+      .custom-back-btn {
+        color: white;
+        background-color: transparent;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        border-radius: 50px;
+        padding: 8px 20px;
+      }
 
-    .red-icon::after {
-      content: "";
-      position: absolute;
-      bottom: -8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 6px solid transparent;
-      border-right: 6px solid transparent;
-      border-top: 8px solid red;
-    }
+      .custom-back-btn:hover {
+        background-color: var(--secondary);
+        color: white;
+      }
 
-    /* Intermediate point markers */
-    .waypoint-icon {
-      background-color: #3498db;
-      border-radius: 50%;
-      border: 2px solid white;
-      width: 12px;
-      height: 12px;
-      display: block;
-    }
-    
-    /* Route point tags */
-    .route-point-tag {
-      position: absolute;
-      background: white;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-      white-space: nowrap;
-      transform: translate(-50%, -100%);
-      margin-top: -10px;
-      z-index: 100;
-    }
-    
-    .route-point-tag::after {
-      content: "";
-      position: absolute;
-      bottom: -4px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-top: 4px solid white;
-    }
-    
-    .distance-badge {
-      background-color: var(--accent);
-      color: white;
-      font-size: 10px;
-      padding: 2px 4px;
-      border-radius: 4px;
-      margin-left: 4px;
-    }
-    
-    /* Destination tag styling */
-    .destination-tag {
-      background-color: rgba(255, 0, 0, 0.1);
-      border-left: 3px solid red;
-    }
+      .custom-back-btn:hover svg {
+        transition: transform 0.3s ease;
+      }
 
-    /* Hide routing machine controls */
-    .leaflet-routing-container {
-      display: none;
-    }
+      .custom-back-btn:hover svg {
+        transform: translateX(-4px);
+      }
 
-    /* Confetti canvas */
-    #confetti-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1000;
-      pointer-events: none;
-    }
-  </style>
-</head>
-<body>
+      /* Route selector styles */
+      .route-selector {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
 
-  <!-- Hero Section with Map -->
-  <section class="hero">
-    <div id="map"></div>
-    <!-- Route selector -->
-    <div id="routeSelector" class="route-selector" style="display: none;">
-      <label for="routeOption">Select Route:</label>
-      <select id="routeOption">
-        <option value="fastest">Fastest Route</option>
-        <option value="scenic">Scenic Route</option>
-        <option value="historic">Historic Route</option>
-      </select>
-    </div>
-  </section>
-  
-  <div class="container">
-    <!-- Destination Header -->
-    <div class="destination-header">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <h1 class="destination-title">{{ destination.name }} Tour</h1>
-          <p class="destination-tagline">{{ destination.tagline }}</p>
-        </div>
-        <div>
-          <a href="{% url 'all_kerala' %}" class="btn custom-back-btn d-inline-flex align-items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left-circle me-2" viewBox="0 0 16 16">
-              <path fill-rule="evenodd" d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0-1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"/>
-              <path fill-rule="evenodd" d="M8.354 11.354a.5.5 0 0 1-.708 0L5.5 9.207l-.354.353a.5.5 0 0 1-.708-.707l1.5-1.5a.5.5 0 0 1 .708 0l1.5 1.5a.5.5 0 0 1 0 .707z"/>
-              <path fill-rule="evenodd" d="M11.5 8a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h6a.5.5 0 0 1 .5.5z"/>
-            </svg>
-            Back to All Destinations
-          </a>
-        </div>
-      </div>
-    </div>
+      .route-selector select {
+        padding: 5px 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
 
-    <section class="py-5">
-      <div class="container">
-        <div class="text-center mb-5 section-title">
-          <h2>{{ destination.duration }} Itinerary</h2>
-          <p>Explore the charm of {{ destination.name }} day by day</p>
-        </div>
+      /* Custom red location icon */
+      .red-icon {
+        background-color: red;
+        border-radius: 50%;
+        border: 2px solid white;
+        width: 20px;
+        height: 20px;
+        display: block;
+      }
 
-        {% for day in destination.itinerary %}
-          <div class="day-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1 }}00">
-            <div class="day-number">Day {{ day.day }}: {{ day.title }}</div>
-            <ul class="mb-3">
-              {% for activity in day.activities %}
-                <li>{{ activity }}</li>
-              {% endfor %}
-            </ul>
-            <div class="highlight-box">
-              <strong>Highlight:</strong> {{ day.highlight }}
-            </div>
-          </div>
-        {% endfor %}
+      .red-icon::after {
+        content: "";
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 8px solid red;
+      }
 
-        <div class="text-center mt-5">
-          <a href="https://forms.gle/qKpo3btNDZfFWBXs8" class="btn-book">Book This Tour</a>
-        </div>
+      /* Intermediate point markers */
+      .waypoint-icon {
+        background-color: #3498db;
+        border-radius: 50%;
+        border: 2px solid white;
+        width: 12px;
+        height: 12px;
+        display: block;
+      }
+
+      /* Route point tags */
+      .route-point-tag {
+        position: absolute;
+        background: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
+        transform: translate(-50%, -100%);
+        margin-top: -10px;
+        z-index: 100;
+      }
+
+      .route-point-tag::after {
+        content: "";
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 4px solid white;
+      }
+
+      .distance-badge {
+        background-color: var(--accent);
+        color: white;
+        font-size: 10px;
+        padding: 2px 4px;
+        border-radius: 4px;
+        margin-left: 4px;
+      }
+
+      /* Destination tag styling */
+      .destination-tag {
+        background-color: rgba(255, 0, 0, 0.1);
+        border-left: 3px solid red;
+      }
+
+      /* Hide routing machine controls */
+      .leaflet-routing-container {
+        display: none;
+      }
+
+      /* Confetti canvas */
+      #confetti-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        pointer-events: none;
+      }
+      .package-selector-container {
+        position: relative;
+        min-width: 200px;
+      }
+
+      .package-selector {
+        background-color: whitesmoke;
+        color: #7d3c98;
+        border: 2px solid #e67e22;
+        border-radius: 50px;
+        padding: 10px 20px;
+        font-weight: 500;
+        appearance: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: medium;
+        width: 100%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .package-selector:hover {
+        background-color: #f8f6f9;
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .package-selector:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.3);
+      }
+
+      .selector-arrow {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: white;
+      }
+      .package-selector option {
+        opacity: 0;
+        animation: slideIn 0.3s forwards;
+        padding: 8px 15px;
+        transition: all 0.2s ease;
+      }
+
+      .package-selector option:hover {
+        background-color: #8e44ad;
+        color: white;
+        transform: translateX(5px);
+      }
+      .animated-badge {
+        display: inline-block;
+        animation: bounce 0.6s ease infinite alternate, pulse 1.5s ease infinite;
+        transform-origin: center;
+      }
+
+      .package-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      .package-card.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .package-card:hover {
+        transform: translateY(-5px) scale(1.01);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .package-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .package-badge {
+        background-color: #1d8222;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-weight: bold;
+        margin-right: 15px;
+        font-size: 0.9rem;
+      }
+
+      .package-header h3 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1.3rem;
+      }
+
+      .package-activities {
+        padding-left: 20px;
+        margin-bottom: 15px;
+      }
+
+      .package-activities li {
+        margin-bottom: 8px;
+        color: #34495e;
+      }
+
+      .package-highlight {
+        background-color: rgba(231, 76, 60, 0.05);
+        border-left: 4px solid #e67e22;
+        padding: 15px;
+        border-radius: 5px;
+        color: #2c3e50;
+        font-style: italic;
+      }
+      .package-selector::-ms-expand {
+        display: none;
+      }
+      .package-selector {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @media (max-width: 576px) {
+        .custom-back-btn {
+          padding: 8px 12px; /* Smaller padding on mobile */
+        }
+        .destination_nages {
+          margin-bottom: 20px;
+        }
+      }
+       .custom-dropdown {
+        position: relative;
+        width: 220px;
+        font-family: "Segoe UI", sans-serif;
+        z-index: 10;
+      }
+
+      .custom-dropdown .selected {
+        background-color: whitesmoke;
+        border: 2px solid #e67e22;
+        border-radius: 50px;
+        padding: 10px 20px;
+        cursor: pointer;
+        color:#7d3c98;
+        font-weight: 500;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .custom-dropdown .dropdown-list {
+        position: absolute;
+        width: 100%;
+        margin-top: 10px;
+        padding: 0;
+        list-style: none;
+        background-color: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
+      }
+
+      .custom-dropdown.open .dropdown-list {
+        max-height: 500px;
+        opacity: 1;
+      }
+
+      .custom-dropdown .dropdown-list li {
+        padding: 5px 10px;
+        border-radius: 50px;
+        margin: 6px 10px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        color: #7d3c98;
+        text-align: center;
+      }
+
+      .custom-dropdown .dropdown-list li:hover {
+        background-color: #8e44ad;
+        color: white;
+      }
+    </style>
+
+  </head>
+  <body>
+    <!-- Hero Section with Map -->
+      <section class="hero">
+      <div id="map"></div>
+      <!-- Route selector -->
+      <div id="routeSelector" class="route-selector" style="display: none">
+        <label for="routeOption">Select Route:</label>
+        <select id="routeOption">
+          <option value="fastest">Fastest Route</option>
+          <option value="scenic">Scenic Route</option>
+          <option value="historic">Historic Route</option>
+        </select>
       </div>
     </section>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
-  <script>
-    AOS.init();
+    <div class="container">
+      <div class="destination-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h1 class="destination-title">{{ destination.name }} Tour</h1>
+            <p class="destination-tagline">{{ destination.tagline }}</p>
+          </div>
+          <div>
+            <a
+              href="{% url 'all_andra' %}"
+              class="btn custom-back-btn d-inline-flex align-items-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="currentColor"
+                class="bi bi-arrow-left-circle me-2"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0-1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"
+                />
+                <path
+                  fill-rule="evenodd"
+                  d="M8.354 11.354a.5.5 0 0 1-.708 0L5.5 9.207l-.354.353a.5.5 0 0 1-.708-.707l1.5-1.5a.5.5 0 0 1 .708 0l1.5 1.5a.5.5 0 0 1 0 .707z"
+                />
+                <path
+                  fill-rule="evenodd"
+                  d="M11.5 8a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h6a.5.5 0 0 1 .5.5z"
+                />
+              </svg>
+              <span class="d-none d-sm-inline">Back to All Destinations</span>
+              <span class="d-inline d-sm-none">Back</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <section class="py-5">
+        <div class="container">
+          <div class="text-center mb-5 section-title">
+            <div
+              class="d-flex justify-content-center align-items-center flex-sm-wrap destination_nages"
+            >
+              <h2 class="me-3 destination-names">
+                {{ destination.name }} Tour Packages
+              </h2>
+              {% if destination.itinerary|length > 1 %}
+              <div class="custom-dropdown" id="customDropdown">
+                <div class="selected">Day Packages</div>
+                <ul class="dropdown-list">
+                  <li data-value="">Day Packages</li>
+                  {% for day in destination.itinerary %}
+                  <li data-value="{{ forloop.counter }}">
+                    {{ forloop.counter }} Day Package
+                  </li>
+                  {% endfor %}
+                  <li data-value="custom">Customize Package</li>
+                </ul>
+              </div>
 
-    // Destination coordinates lookup with multiple routes
-    const DESTINATION_COORDINATES = {
-     "Alleppey": { 
-        coords: [9.4981, 76.3388],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"},
-            {coords: [9.4981, 76.3388], name: "Alleppey"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kothamangalam"},
-            {coords: [9.8576, 76.3895], name: "Kottayam"},
-            {coords: [9.4981, 76.3388], name: "Alleppey"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.7867, 76.6548], name: "Palakkad"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [9.4981, 76.3388], name: "Alleppey"}
-          ]
-        }
-      },
-      "Munnar": { 
-        coords: [10.0889, 77.0595],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 77.0595], name: "Munnar"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.2205, 77.0629], name: "Marayoor"},
-            {coords: [10.0889, 77.0595], name: "Munnar"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [10.0889, 77.0595], name: "Munnar"}
-          ]
-        }
-      },
-      "Kochi": { 
-        coords: [9.9312, 76.2673],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kothamangalam"},
-            {coords: [9.9312, 76.2673], name: "Kochi"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.7867, 76.6548], name: "Palakkad"},
-            {coords: [9.9312, 76.2673], name: "Kochi"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"},
-            {coords: [9.9312, 76.2673], name: "Kochi"}
-          ]
-        }
-      },
-      "Kovalam": { 
-        coords: [8.4004, 76.9781],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.5241, 76.9366], name: "Trivandrum"},
-            {coords: [8.4004, 76.9781], name: "Kovalam"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [8.4004, 76.9781], name: "Kovalam"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.7139, 77.7567], name: "Kanyakumari"},
-            {coords: [8.4004, 76.9781], name: "Kovalam"}
-          ]
-        }
-      },
-      "Thekkady": { 
-        coords: [9.5679, 77.3213],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 77.3213], name: "Thekkady"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 77.0595], name: "Munnar"},
-            {coords: [9.5679, 77.3213], name: "Thekkady"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.8576, 76.3895], name: "Kottayam"},
-            {coords: [9.5679, 77.3213], name: "Thekkady"}
-          ]
-        }
-      },
-      "Varkala": { 
-        coords: [8.7333, 76.7167],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.7333, 76.7167], name: "Varkala"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [8.7333, 76.7167], name: "Varkala"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.5241, 76.9366], name: "Trivandrum"},
-            {coords: [8.7333, 76.7167], name: "Varkala"}
-          ]
-        }
-      },
-      "Wayanad": { 
-        coords: [11.6854, 76.1320],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.6854, 76.1320], name: "Wayanad"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.2588, 76.3279], name: "Nilambur"},
-            {coords: [11.6854, 76.1320], name: "Wayanad"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.0414, 76.0815], name: "Sultan Bathery"},
-            {coords: [11.6854, 76.1320], name: "Wayanad"}
-          ]
-        }
-      },
-      "Bekal": { 
-        coords: [12.3896, 75.0283],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.8745, 75.3704], name: "Kannur"},
-            {coords: [12.3896, 75.0283], name: "Bekal"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.2588, 76.3279], name: "Nilambur"},
-            {coords: [12.3896, 75.0283], name: "Bekal"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.8745, 75.3704], name: "Kannur"},
-            {coords: [12.3896, 75.0283], name: "Bekal"}
-          ]
-        }
-      },
-      "Kumarakom": { 
-        coords: [9.6179, 76.4295],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.8576, 76.3895], name: "Kottayam"},
-            {coords: [9.6179, 76.4295], name: "Kumarakom"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [9.6179, 76.4295], name: "Kumarakom"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.4981, 76.3388], name: "Alleppey"},
-            {coords: [9.6179, 76.4295], name: "Kumarakom"}
-          ]
-        }
-      },
-      "Trivandrum": { 
-        coords: [8.5241, 76.9366],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [8.5241, 76.9366], name: "Trivandrum"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.7139, 77.7567], name: "Kanyakumari"},
-            {coords: [8.5241, 76.9366], name: "Trivandrum"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.9312, 76.2673], name: "Kochi"},
-            {coords: [8.5241, 76.9366], name: "Trivandrum"}
-          ]
-        }
-      },
-      "Athirappilly": { 
-        coords: [10.2849, 76.5681],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.2849, 76.5681], name: "Athirappilly"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [10.2849, 76.5681], name: "Athirappilly"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"},
-            {coords: [10.2849, 76.5681], name: "Athirappilly"}
-          ]
-        }
-      },
-      "Kannur": { 
-        coords: [11.8745, 75.3704],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.2588, 76.3279], name: "Nilambur"},
-            {coords: [11.8745, 75.3704], name: "Kannur"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.6854, 76.1320], name: "Wayanad"},
-            {coords: [11.8745, 75.3704], name: "Kannur"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.0414, 76.0815], name: "Sultan Bathery"},
-            {coords: [11.8745, 75.3704], name: "Kannur"}
-          ]
-        }
-      },
-      "Poovar": { 
-        coords: [8.3143, 77.0682],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.5241, 76.9366], name: "Trivandrum"},
-            {coords: [8.3143, 77.0682], name: "Poovar"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.7139, 77.7567], name: "Kanyakumari"},
-            {coords: [8.3143, 77.0682], name: "Poovar"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [8.3143, 77.0682], name: "Poovar"}
-          ]
-        }
-      },
-      "Guruvayur": { 
-        coords: [10.5942, 76.0412],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"},
-            {coords: [10.5942, 76.0412], name: "Guruvayur"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.7867, 76.6548], name: "Palakkad"},
-            {coords: [10.5942, 76.0412], name: "Guruvayur"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [10.5942, 76.0412], name: "Guruvayur"}
-          ]
-        }
-      },
-      "Idukki": { 
-        coords: [9.8497, 76.9720],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.8497, 76.9720], name: "Idukki"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 77.0595], name: "Munnar"},
-            {coords: [9.8497, 76.9720], name: "Idukki"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 77.3213], name: "Thekkady"},
-            {coords: [9.8497, 76.9720], name: "Idukki"}
-          ]
-        }
-      },
-      "Kollam": { 
-        coords: [8.8932, 76.6141],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [8.8932, 76.6141], name: "Kollam"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.7139, 77.7567], name: "Kanyakumari"},
-            {coords: [8.8932, 76.6141], name: "Kollam"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.9312, 76.2673], name: "Kochi"},
-            {coords: [8.8932, 76.6141], name: "Kollam"}
-          ]
-        }
-      },
-      "Ashtamudi": { 
-        coords: [8.9667, 76.5667],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [8.9667, 76.5667], name: "Ashtamudi"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.7139, 77.7567], name: "Kanyakumari"},
-            {coords: [8.9667, 76.5667], name: "Ashtamudi"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.9312, 76.2673], name: "Kochi"},
-            {coords: [8.9667, 76.5667], name: "Ashtamudi"}
-          ]
-        }
-      },
-      "Marari": { 
-        coords: [9.6225, 76.3008],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.9312, 76.2673], name: "Kochi"},
-            {coords: [9.6225, 76.3008], name: "Marari"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.4981, 76.3388], name: "Alleppey"},
-            {coords: [9.6225, 76.3008], name: "Marari"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.8576, 76.3895], name: "Kottayam"},
-            {coords: [9.6225, 76.3008], name: "Marari"}
-          ]
-        }
-      },
-      "Neyyar": { 
-        coords: [8.5333, 77.1667],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.5241, 76.9366], name: "Trivandrum"},
-            {coords: [8.5333, 77.1667], name: "Neyyar"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.7139, 77.7567], name: "Kanyakumari"},
-            {coords: [8.5333, 77.1667], name: "Neyyar"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [8.5333, 77.1667], name: "Neyyar"}
-          ]
-        }
-      },
-      "Silent Valley": { 
-        coords: [11.0833, 76.4333],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.0833, 76.4333], name: "Silent Valley"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.2588, 76.3279], name: "Nilambur"},
-            {coords: [11.0833, 76.4333], name: "Silent Valley"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [11.0414, 76.0815], name: "Sultan Bathery"},
-            {coords: [11.0833, 76.4333], name: "Silent Valley"}
-          ]
-        }
-      },
-      "Ponmudi": { 
-        coords: [8.7596, 77.1199],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.5241, 76.9366], name: "Trivandrum"},
-            {coords: [8.7596, 77.1199], name: "Ponmudi"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.7139, 77.7567], name: "Kanyakumari"},
-            {coords: [8.7596, 77.1199], name: "Ponmudi"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [8.7596, 77.1199], name: "Ponmudi"}
-          ]
-        }
-      },
-      "Cherai": { 
-        coords: [10.1418, 76.1839],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [10.1418, 76.1839], name: "Cherai"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.9312, 76.2673], name: "Kochi"},
-            {coords: [10.1418, 76.1839], name: "Cherai"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"},
-            {coords: [10.1418, 76.1839], name: "Cherai"}
-          ]
-        }
-      },
-      "Thrissur": { 
-        coords: [10.5276, 76.2144],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.7867, 76.6548], name: "Palakkad"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"}
-          ]
-        }
-      },
-      "Parambikulam": { 
-        coords: [10.3833, 76.7000],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.3833, 76.7000], name: "Parambikulam"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 77.0595], name: "Munnar"},
-            {coords: [10.3833, 76.7000], name: "Parambikulam"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.7867, 76.6548], name: "Palakkad"},
-            {coords: [10.3833, 76.7000], name: "Parambikulam"}
-          ]
-        }
-      },
-      "Neyyattinkara": { 
-        coords: [8.4000, 77.0833],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.5241, 76.9366], name: "Trivandrum"},
-            {coords: [8.4000, 77.0833], name: "Neyyattinkara"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [8.7139, 77.7567], name: "Kanyakumari"},
-            {coords: [8.4000, 77.0833], name: "Neyyattinkara"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [8.4000, 77.0833], name: "Neyyattinkara"}
-          ]
-        }
-      },
-      "Alappuzha": { 
-        coords: [9.4981, 76.3388],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"},
-            {coords: [9.4981, 76.3388], name: "Alappuzha"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.8576, 76.3895], name: "Kottayam"},
-            {coords: [9.4981, 76.3388], name: "Alappuzha"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [9.4981, 76.3388], name: "Alappuzha"}
-          ]
-        }
-      },
-      "Malampuzha": { 
-        coords: [10.8333, 76.6833],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.8333, 76.6833], name: "Malampuzha"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.7867, 76.6548], name: "Palakkad"},
-            {coords: [10.8333, 76.6833], name: "Malampuzha"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"},
-            {coords: [10.8333, 76.6833], name: "Malampuzha"}
-          ]
-        }
-      },
-      "Palakkad": { 
-        coords: [10.7867, 76.6548],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.7867, 76.6548], name: "Palakkad"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.5276, 76.2144], name: "Thrissur"},
-            {coords: [10.7867, 76.6548], name: "Palakkad"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [10.7867, 76.6548], name: "Palakkad"}
-          ]
-        }
-      },
-      "Kuttanad": { 
-        coords: [9.4333, 76.4333],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.8576, 76.3895], name: "Kottayam"},
-            {coords: [9.4333, 76.4333], name: "Kuttanad"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.4981, 76.3388], name: "Alleppey"},
-            {coords: [9.4333, 76.4333], name: "Kuttanad"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [10.0889, 76.4965], name: "Kochi"},
-            {coords: [9.4333, 76.4333], name: "Kuttanad"}
-          ]
-        }
-      },
-      "Sabarimala": { 
-        coords: [9.4333, 77.0833],
-        routes: {
-          fastest: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 76.8922], name: "Pathanamthitta"},
-            {coords: [9.4333, 77.0833], name: "Sabarimala"}
-          ],
-          scenic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.5679, 77.3213], name: "Thekkady"},
-            {coords: [9.4333, 77.0833], name: "Sabarimala"}
-          ],
-          historic: [
-            {coords: [11.0168, 76.9558], name: "Coimbatore"},
-            {coords: [9.9312, 76.2673], name: "Kochi"},
-            {coords: [9.4333, 77.0833], name: "Sabarimala"}
-          ]
-        }
-      }
+              {% endif %}
+            </div>
+            <p class="mt-3">
+              Choose your perfect itinerary for {{ destination.name }}
+            </p>
+          </div>
 
+          <div id="packagesContainer">
+            {% for day in destination.itinerary %}
+            <div
+              class="package-card {% if not forloop.first %}d-none{% endif %}"
+              id="package{{ forloop.counter }}"
+              data-aos="fade-up"
+            >
+              <div class="package-header">
+                <span class="package-badge animated-badge">
+                  {{ forloop.counter }} Day Package
+                </span>
+                <h3>{{ day.title }}</h3>
+              </div>
+              <ul class="package-activities">
+                {% for activity in day.activities %}
+                <li>{{ activity }}</li>
+                {% endfor %}
+              </ul>
+              <div class="package-highlight">
+                <strong>Package Highlight:</strong> {{ day.highlight }}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
 
-    };
+          <div class="text-center mt-5">
+            <a href="https://forms.gle/qKpo3btNDZfFWBXs8" class="btn-book"
+              >Book This Package</a
+            >
+          </div>
+        </div>
+      </section>
 
-    // Get destination name from page title
-    const destinationName = document.querySelector('.destination-title').textContent.replace(' Tour', '').trim();
-    const destinationInfo = DESTINATION_COORDINATES[destinationName] || { 
-      coords: [13.0827, 80.2707],
-      routes: {
-        fastest: [
-          {coords: [9.9252, 78.1198], name: "Madurai"},
-          {coords: [13.0827, 80.2707], name: "Chennai"}
-        ]
-      }
-    };
-    const destinationCoords = destinationInfo.coords;
+    </div>
 
-    // Initialize the map
-    const startPoint = [9.9252, 78.1198];
-    const map = L.map('map').setView([
-      (startPoint[0] + destinationCoords[0]) / 2,
-      (startPoint[1] + destinationCoords[1]) / 2
-    ], 8);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script>
+      AOS.init();
 
-    // Create custom icons
-    const redIcon = L.divIcon({
-      className: 'red-icon',
-      iconSize: [20, 20],
-      iconAnchor: [10, 10]
-    });
+      // Destination coordinates lookup with multiple routes
+      const DESTINATION_COORDINATES = {
+        Alleppey: {
+          coords: [9.4981, 76.3388],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+              { coords: [9.4981, 76.3388], name: "Alleppey" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kothamangalam" },
+              { coords: [9.8576, 76.3895], name: "Kottayam" },
+              { coords: [9.4981, 76.3388], name: "Alleppey" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.7867, 76.6548], name: "Palakkad" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [9.4981, 76.3388], name: "Alleppey" },
+            ],
+          },
+        },
+        Munnar: {
+          coords: [10.0889, 77.0595],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 77.0595], name: "Munnar" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.2205, 77.0629], name: "Marayoor" },
+              { coords: [10.0889, 77.0595], name: "Munnar" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [10.0889, 77.0595], name: "Munnar" },
+            ],
+          },
+        },
+        Kochi: {
+          coords: [9.9312, 76.2673],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kothamangalam" },
+              { coords: [9.9312, 76.2673], name: "Kochi" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.7867, 76.6548], name: "Palakkad" },
+              { coords: [9.9312, 76.2673], name: "Kochi" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+              { coords: [9.9312, 76.2673], name: "Kochi" },
+            ],
+          },
+        },
+        Kovalam: {
+          coords: [8.4004, 76.9781],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.5241, 76.9366], name: "Trivandrum" },
+              { coords: [8.4004, 76.9781], name: "Kovalam" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [8.4004, 76.9781], name: "Kovalam" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.7139, 77.7567], name: "Kanyakumari" },
+              { coords: [8.4004, 76.9781], name: "Kovalam" },
+            ],
+          },
+        },
+        Thekkady: {
+          coords: [9.5679, 77.3213],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 77.3213], name: "Thekkady" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 77.0595], name: "Munnar" },
+              { coords: [9.5679, 77.3213], name: "Thekkady" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.8576, 76.3895], name: "Kottayam" },
+              { coords: [9.5679, 77.3213], name: "Thekkady" },
+            ],
+          },
+        },
+        Varkala: {
+          coords: [8.7333, 76.7167],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.7333, 76.7167], name: "Varkala" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [8.7333, 76.7167], name: "Varkala" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.5241, 76.9366], name: "Trivandrum" },
+              { coords: [8.7333, 76.7167], name: "Varkala" },
+            ],
+          },
+        },
+        Wayanad: {
+          coords: [11.6854, 76.132],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.6854, 76.132], name: "Wayanad" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.2588, 76.3279], name: "Nilambur" },
+              { coords: [11.6854, 76.132], name: "Wayanad" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.0414, 76.0815], name: "Sultan Bathery" },
+              { coords: [11.6854, 76.132], name: "Wayanad" },
+            ],
+          },
+        },
+        Bekal: {
+          coords: [12.3896, 75.0283],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.8745, 75.3704], name: "Kannur" },
+              { coords: [12.3896, 75.0283], name: "Bekal" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.2588, 76.3279], name: "Nilambur" },
+              { coords: [12.3896, 75.0283], name: "Bekal" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.8745, 75.3704], name: "Kannur" },
+              { coords: [12.3896, 75.0283], name: "Bekal" },
+            ],
+          },
+        },
+        Kumarakom: {
+          coords: [9.6179, 76.4295],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.8576, 76.3895], name: "Kottayam" },
+              { coords: [9.6179, 76.4295], name: "Kumarakom" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [9.6179, 76.4295], name: "Kumarakom" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.4981, 76.3388], name: "Alleppey" },
+              { coords: [9.6179, 76.4295], name: "Kumarakom" },
+            ],
+          },
+        },
+        Trivandrum: {
+          coords: [8.5241, 76.9366],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [8.5241, 76.9366], name: "Trivandrum" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.7139, 77.7567], name: "Kanyakumari" },
+              { coords: [8.5241, 76.9366], name: "Trivandrum" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.9312, 76.2673], name: "Kochi" },
+              { coords: [8.5241, 76.9366], name: "Trivandrum" },
+            ],
+          },
+        },
+        Athirappilly: {
+          coords: [10.2849, 76.5681],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.2849, 76.5681], name: "Athirappilly" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [10.2849, 76.5681], name: "Athirappilly" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+              { coords: [10.2849, 76.5681], name: "Athirappilly" },
+            ],
+          },
+        },
+        Kannur: {
+          coords: [11.8745, 75.3704],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.2588, 76.3279], name: "Nilambur" },
+              { coords: [11.8745, 75.3704], name: "Kannur" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.6854, 76.132], name: "Wayanad" },
+              { coords: [11.8745, 75.3704], name: "Kannur" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.0414, 76.0815], name: "Sultan Bathery" },
+              { coords: [11.8745, 75.3704], name: "Kannur" },
+            ],
+          },
+        },
+        Poovar: {
+          coords: [8.3143, 77.0682],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.5241, 76.9366], name: "Trivandrum" },
+              { coords: [8.3143, 77.0682], name: "Poovar" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.7139, 77.7567], name: "Kanyakumari" },
+              { coords: [8.3143, 77.0682], name: "Poovar" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [8.3143, 77.0682], name: "Poovar" },
+            ],
+          },
+        },
+        Guruvayur: {
+          coords: [10.5942, 76.0412],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+              { coords: [10.5942, 76.0412], name: "Guruvayur" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.7867, 76.6548], name: "Palakkad" },
+              { coords: [10.5942, 76.0412], name: "Guruvayur" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [10.5942, 76.0412], name: "Guruvayur" },
+            ],
+          },
+        },
+        Idukki: {
+          coords: [9.8497, 76.972],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.8497, 76.972], name: "Idukki" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 77.0595], name: "Munnar" },
+              { coords: [9.8497, 76.972], name: "Idukki" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 77.3213], name: "Thekkady" },
+              { coords: [9.8497, 76.972], name: "Idukki" },
+            ],
+          },
+        },
+        Kollam: {
+          coords: [8.8932, 76.6141],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [8.8932, 76.6141], name: "Kollam" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.7139, 77.7567], name: "Kanyakumari" },
+              { coords: [8.8932, 76.6141], name: "Kollam" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.9312, 76.2673], name: "Kochi" },
+              { coords: [8.8932, 76.6141], name: "Kollam" },
+            ],
+          },
+        },
+        Ashtamudi: {
+          coords: [8.9667, 76.5667],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [8.9667, 76.5667], name: "Ashtamudi" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.7139, 77.7567], name: "Kanyakumari" },
+              { coords: [8.9667, 76.5667], name: "Ashtamudi" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.9312, 76.2673], name: "Kochi" },
+              { coords: [8.9667, 76.5667], name: "Ashtamudi" },
+            ],
+          },
+        },
+        Marari: {
+          coords: [9.6225, 76.3008],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.9312, 76.2673], name: "Kochi" },
+              { coords: [9.6225, 76.3008], name: "Marari" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.4981, 76.3388], name: "Alleppey" },
+              { coords: [9.6225, 76.3008], name: "Marari" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.8576, 76.3895], name: "Kottayam" },
+              { coords: [9.6225, 76.3008], name: "Marari" },
+            ],
+          },
+        },
+        Neyyar: {
+          coords: [8.5333, 77.1667],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.5241, 76.9366], name: "Trivandrum" },
+              { coords: [8.5333, 77.1667], name: "Neyyar" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.7139, 77.7567], name: "Kanyakumari" },
+              { coords: [8.5333, 77.1667], name: "Neyyar" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [8.5333, 77.1667], name: "Neyyar" },
+            ],
+          },
+        },
+        "Silent Valley": {
+          coords: [11.0833, 76.4333],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.0833, 76.4333], name: "Silent Valley" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.2588, 76.3279], name: "Nilambur" },
+              { coords: [11.0833, 76.4333], name: "Silent Valley" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [11.0414, 76.0815], name: "Sultan Bathery" },
+              { coords: [11.0833, 76.4333], name: "Silent Valley" },
+            ],
+          },
+        },
+        Ponmudi: {
+          coords: [8.7596, 77.1199],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.5241, 76.9366], name: "Trivandrum" },
+              { coords: [8.7596, 77.1199], name: "Ponmudi" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.7139, 77.7567], name: "Kanyakumari" },
+              { coords: [8.7596, 77.1199], name: "Ponmudi" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [8.7596, 77.1199], name: "Ponmudi" },
+            ],
+          },
+        },
+        Cherai: {
+          coords: [10.1418, 76.1839],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [10.1418, 76.1839], name: "Cherai" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.9312, 76.2673], name: "Kochi" },
+              { coords: [10.1418, 76.1839], name: "Cherai" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+              { coords: [10.1418, 76.1839], name: "Cherai" },
+            ],
+          },
+        },
+        Thrissur: {
+          coords: [10.5276, 76.2144],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.7867, 76.6548], name: "Palakkad" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+            ],
+          },
+        },
+        Parambikulam: {
+          coords: [10.3833, 76.7],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.3833, 76.7], name: "Parambikulam" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 77.0595], name: "Munnar" },
+              { coords: [10.3833, 76.7], name: "Parambikulam" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.7867, 76.6548], name: "Palakkad" },
+              { coords: [10.3833, 76.7], name: "Parambikulam" },
+            ],
+          },
+        },
+        Neyyattinkara: {
+          coords: [8.4, 77.0833],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.5241, 76.9366], name: "Trivandrum" },
+              { coords: [8.4, 77.0833], name: "Neyyattinkara" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [8.7139, 77.7567], name: "Kanyakumari" },
+              { coords: [8.4, 77.0833], name: "Neyyattinkara" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [8.4, 77.0833], name: "Neyyattinkara" },
+            ],
+          },
+        },
+        Alappuzha: {
+          coords: [9.4981, 76.3388],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+              { coords: [9.4981, 76.3388], name: "Alappuzha" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.8576, 76.3895], name: "Kottayam" },
+              { coords: [9.4981, 76.3388], name: "Alappuzha" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [9.4981, 76.3388], name: "Alappuzha" },
+            ],
+          },
+        },
+        Malampuzha: {
+          coords: [10.8333, 76.6833],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.8333, 76.6833], name: "Malampuzha" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.7867, 76.6548], name: "Palakkad" },
+              { coords: [10.8333, 76.6833], name: "Malampuzha" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+              { coords: [10.8333, 76.6833], name: "Malampuzha" },
+            ],
+          },
+        },
+        Palakkad: {
+          coords: [10.7867, 76.6548],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.7867, 76.6548], name: "Palakkad" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.5276, 76.2144], name: "Thrissur" },
+              { coords: [10.7867, 76.6548], name: "Palakkad" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [10.7867, 76.6548], name: "Palakkad" },
+            ],
+          },
+        },
+        Kuttanad: {
+          coords: [9.4333, 76.4333],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.8576, 76.3895], name: "Kottayam" },
+              { coords: [9.4333, 76.4333], name: "Kuttanad" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.4981, 76.3388], name: "Alleppey" },
+              { coords: [9.4333, 76.4333], name: "Kuttanad" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [10.0889, 76.4965], name: "Kochi" },
+              { coords: [9.4333, 76.4333], name: "Kuttanad" },
+            ],
+          },
+        },
+        Sabarimala: {
+          coords: [9.4333, 77.0833],
+          routes: {
+            fastest: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 76.8922], name: "Pathanamthitta" },
+              { coords: [9.4333, 77.0833], name: "Sabarimala" },
+            ],
+            scenic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.5679, 77.3213], name: "Thekkady" },
+              { coords: [9.4333, 77.0833], name: "Sabarimala" },
+            ],
+            historic: [
+              { coords: [11.0168, 76.9558], name: "Coimbatore" },
+              { coords: [9.9312, 76.2673], name: "Kochi" },
+              { coords: [9.4333, 77.0833], name: "Sabarimala" },
+            ],
+          },
+        },
+      };
+      const destinationName = document
+        .querySelector(".destination-title")
+        .textContent.replace(" Tour", "")
+        .trim();
+   
+      console.log("Final destination name:", destinationName);
+      const destinationInfo = DESTINATION_COORDINATES[destinationName] || {
+        coords: [13.0827, 80.2707],
+        routes: {
+          fastest: [
+            { coords: [9.9252, 78.1198], name: "Madurai" },
+            { coords: [13.0827, 80.2707], name: "Chennai" },
+          ],
+        },
+      };
+      console.log("Destination name from page:", destinationName);
+      console.log(
+        "Available destinations:",
+        Object.keys(DESTINATION_COORDINATES)
+      );
+      const destinationCoords = destinationInfo.coords;
 
-    const waypointIcon = L.divIcon({
-      className: 'waypoint-icon',
-      iconSize: [12, 12],
-      iconAnchor: [6, 6]
-    });
-
-    // Add markers
-    L.marker(startPoint).addTo(map).bindPopup("Starting Point: Madurai");
-    const destinationMarker = L.marker(destinationCoords, { icon: redIcon }).addTo(map);
-
-    // Show route selector if multiple routes are available
-    if (destinationInfo.routes && Object.keys(destinationInfo.routes).length > 1) {
-      document.getElementById('routeSelector').style.display = 'block';
-    }
-
-    // Car marker setup
-    const carElement = document.createElement('div');
-    carElement.className = 'car-marker';
-    carElement.innerHTML = `<img src="{% static 'images/topcarview.png' %}" class="car-icon" />`;
-
-    const carIcon = L.divIcon({
-      html: carElement,
-      className: '',
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-    });
-
-    // Animation variables
-    let currentPosition = 0;
-    let currentSpeed = 0;
-    const targetSpeed = 0.5; // Increased speed
-    const acceleration = 0.005; // Faster acceleration
-    let animationId = null;
-    let smoothedRoute = [];
-    let currentRoute = null;
-    let routeControl = null;
-    let waypointMarkers = [];
-    let routePointTags = [];
-    let totalDistance = 0;
-    let lastAngle = 0;
-    const angleSmoothingFactor = 0.2;
-    let lastFrameTime = 0;
-    const targetFPS = 60; // Higher frame rate for smoother animation
-    let hasReachedDestination = false;
-
-    const carMarker = L.marker(startPoint, { icon: carIcon }).addTo(map);
-
-    // Initialize Routing Machine
-    const routingControl = L.Routing.control({
-      waypoints: [],
-      routeWhileDragging: false,
-      show: false,
-      addWaypoints: false,
-      draggableWaypoints: false,
-      fitSelectedRoutes: false,
-      lineOptions: {
-        styles: [{color: '#3498db', opacity: 0.7, weight: 7}]
-      }
-    }).addTo(map);
-
-    // Start the trip
-    fetchRoute();
-
-    // Route selector event listener
-    document.getElementById('routeOption')?.addEventListener('change', function() {
-      const selectedRoute = this.value;
-      if (destinationInfo.routes && destinationInfo.routes[selectedRoute]) {
-        currentRoute = destinationInfo.routes[selectedRoute];
-        processRoute(currentRoute);
-      }
-    });
-
-    function fetchRoute() {
-      if (destinationInfo.routes) {
-        const routeOption = document.getElementById('routeOption')?.value || 'fastest';
-        currentRoute = destinationInfo.routes[routeOption] || destinationInfo.routes.fastest;
-        processRoute(currentRoute);
-      } else {
-        // Use Routing Machine for realistic routes
-        routingControl.setWaypoints([
-          L.latLng(startPoint[0], startPoint[1]),
-          L.latLng(destinationCoords[0], destinationCoords[1])
-        ]);
-        
-        routingControl.on('routesfound', function(e) {
-          const routes = e.routes;
-          const route = routes[0].coordinates.map(coord => [coord.lat, coord.lng]);
-          processRoute([{coords: startPoint, name: "Madurai"}, {coords: destinationCoords, name: destinationName}], route);
-        });
-      }
-    }
-
-    function processRoute(routePoints, coordinates = null) {
-      // Clear existing elements
-      if (routeControl) {
-        map.removeControl(routeControl);
-      }
-      
-      waypointMarkers.forEach(marker => map.removeLayer(marker));
-      waypointMarkers = [];
-      
-      routePointTags.forEach(tag => map.removeLayer(tag));
-      routePointTags = [];
-
-      // Reset animation state
-      hasReachedDestination = false;
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-        animationId = null;
-      }
-
-      // Convert route to array of coordinates if it's an array of objects
-      const routeCoords = coordinates || routePoints.map(point => point.coords || point);
-      const routeNames = routePoints.map(point => point.name || null);
-
-      // Calculate total distance using Routing Machine or fallback
-      if (coordinates) {
-        routingControl.on('routesfound', function(e) {
-          totalDistance = e.routes[0].summary.totalDistance / 1000; // Convert to km
-          updateRouteVisuals(routePoints, routeCoords);
-        });
-      } else {
-        totalDistance = 0;
-        for (let i = 0; i < routeCoords.length - 1; i++) {
-          totalDistance += calculateDistance(
-            routeCoords[i][0], routeCoords[i][1],
-            routeCoords[i+1][0], routeCoords[i+1][1]
-          );
-        }
-        updateRouteVisuals(routePoints, routeCoords);
-      }
-    }
-
-    function updateRouteVisuals(routePoints, routeCoords) {
-      // Add route point tags with distance information
-      let cumulativeDistance = 0;
-      for (let i = 0; i < routePoints.length; i++) {
-        const point = routePoints[i].coords;
-        const name = routePoints[i].name;
-        
-        if (i > 0) {
-          const prevPoint = routePoints[i-1].coords;
-          cumulativeDistance += calculateDistance(
-            prevPoint[0], prevPoint[1],
-            point[0], point[1]
-          );
-        }
-        
-        // Create tag for all route points
-        const isDestination = i === routePoints.length - 1;
-        const tag = L.divIcon({
-          className: `route-point-tag ${isDestination ? 'destination-tag' : ''}`,
-          html: `${name || (isDestination ? 'Destination' : `Point ${i+1}`)} <span class="distance-badge">${Math.round(cumulativeDistance)}km</span>`,
-          iconSize: [100, 30],
-          iconAnchor: [50, 30]
-        });
-        
-        const marker = L.marker(point, { icon: tag, zIndexOffset: 1000 }).addTo(map);
-        routePointTags.push(marker);
-        
-        // Add waypoint markers for intermediate points
-        if (i > 0 && i < routePoints.length - 1) {
-          const marker = L.marker(point, { icon: waypointIcon }).addTo(map);
-          waypointMarkers.push(marker);
-        }
-      }
-
-      // Update destination marker
-      destinationMarker.setPopupContent(
-        `<b>Destination:</b> ${destinationName}<br><b>Total Distance:</b> ${Math.round(totalDistance)}km`
+      // Initialize the map
+      const startPoint = [9.9252, 78.1198];
+      const map = L.map("map").setView(
+        [
+          (startPoint[0] + destinationCoords[0]) / 2,
+          (startPoint[1] + destinationCoords[1]) / 2,
+        ],
+        8
       );
 
-      // Create curved route using Routing Machine
-      const waypoints = routePoints.map(point => 
-        L.latLng(point.coords[0], point.coords[1])
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
+        map
       );
-      
-      routeControl = L.Routing.control({
-        waypoints: waypoints,
+
+      // Create custom icons
+      const redIcon = L.divIcon({
+        className: "red-icon",
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      });
+
+      const waypointIcon = L.divIcon({
+        className: "waypoint-icon",
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      });
+
+      // Add markers
+      L.marker(startPoint).addTo(map).bindPopup("Starting Point: Madurai");
+      const destinationMarker = L.marker(destinationCoords, {
+        icon: redIcon,
+      }).addTo(map);
+
+      // Show route selector if multiple routes are available
+      if (
+        destinationInfo.routes &&
+        Object.keys(destinationInfo.routes).length > 1
+      ) {
+        document.getElementById("routeSelector").style.display = "block";
+      }
+
+      // Car marker setup
+      const carElement = document.createElement("div");
+      carElement.className = "car-marker";
+      carElement.innerHTML = `<img src="{% static 'images/topcarview.png' %}" class="car-icon" />`;
+
+      const carIcon = L.divIcon({
+        html: carElement,
+        className: "",
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+
+      // Animation variables
+      let currentPosition = 0;
+      let currentSpeed = 0;
+      const targetSpeed = 0.5; // Increased speed
+      const acceleration = 0.005; // Faster acceleration
+      let animationId = null;
+      let smoothedRoute = [];
+      let currentRoute = null;
+      let routeControl = null;
+      let waypointMarkers = [];
+      let routePointTags = [];
+      let totalDistance = 0;
+      let lastAngle = 0;
+      const angleSmoothingFactor = 0.2;
+      let lastFrameTime = 0;
+      const targetFPS = 60; // Higher frame rate for smoother animation
+      let hasReachedDestination = false;
+
+      const carMarker = L.marker(startPoint, { icon: carIcon }).addTo(map);
+
+      // Initialize Routing Machine
+      const routingControl = L.Routing.control({
+        waypoints: [],
         routeWhileDragging: false,
         show: false,
         addWaypoints: false,
         draggableWaypoints: false,
-        fitSelectedRoutes: true,
+        fitSelectedRoutes: false,
         lineOptions: {
-          styles: [{
-            color: getRouteColor(),
-            opacity: 0.7,
-            weight: 7
-          }]
-        }
+          styles: [{ color: "#3498db", opacity: 0.7, weight: 7 }],
+        },
       }).addTo(map);
 
-      // Get the actual route coordinates for animation
-      routeControl.on('routesfound', function(e) {
-        const routes = e.routes;
-        smoothedRoute = routes[0].coordinates.map(coord => [coord.lat, coord.lng]);
-        
-        // Reset and start animation
+      // Start the trip
+      fetchRoute();
+
+      // Route selector event listener
+      document
+        .getElementById("routeOption")
+        ?.addEventListener("change", function () {
+          const selectedRoute = this.value;
+          if (destinationInfo.routes && destinationInfo.routes[selectedRoute]) {
+            currentRoute = destinationInfo.routes[selectedRoute];
+            processRoute(currentRoute);
+          }
+        });
+
+      function fetchRoute() {
+        if (destinationInfo.routes) {
+          const routeOption =
+            document.getElementById("routeOption")?.value || "fastest";
+          currentRoute =
+            destinationInfo.routes[routeOption] ||
+            destinationInfo.routes.fastest;
+          processRoute(currentRoute);
+        } else {
+          // Use Routing Machine for realistic routes
+          routingControl.setWaypoints([
+            L.latLng(startPoint[0], startPoint[1]),
+            L.latLng(destinationCoords[0], destinationCoords[1]),
+          ]);
+
+          routingControl.on("routesfound", function (e) {
+            const routes = e.routes;
+            const route = routes[0].coordinates.map((coord) => [
+              coord.lat,
+              coord.lng,
+            ]);
+            processRoute(
+              [
+                { coords: startPoint, name: "Madurai" },
+                { coords: destinationCoords, name: destinationName },
+              ],
+              route
+            );
+          });
+        }
+      }
+
+      function processRoute(routePoints, coordinates = null) {
+        // Clear existing elements
+        if (routeControl) {
+          map.removeControl(routeControl);
+        }
+
+        waypointMarkers.forEach((marker) => map.removeLayer(marker));
+        waypointMarkers = [];
+
+        routePointTags.forEach((tag) => map.removeLayer(tag));
+        routePointTags = [];
+
+        // Reset animation state
+        hasReachedDestination = false;
         if (animationId) {
           cancelAnimationFrame(animationId);
+          animationId = null;
         }
-        currentPosition = 0;
-        currentSpeed = 0;
+
+        // Convert route to array of coordinates if it's an array of objects
+        const routeCoords =
+          coordinates || routePoints.map((point) => point.coords || point);
+        const routeNames = routePoints.map((point) => point.name || null);
+
+        // Calculate total distance using Routing Machine or fallback
+        if (coordinates) {
+          routingControl.on("routesfound", function (e) {
+            totalDistance = e.routes[0].summary.totalDistance / 1000; // Convert to km
+            updateRouteVisuals(routePoints, routeCoords);
+          });
+        } else {
+          totalDistance = 0;
+          for (let i = 0; i < routeCoords.length - 1; i++) {
+            totalDistance += calculateDistance(
+              routeCoords[i][0],
+              routeCoords[i][1],
+              routeCoords[i + 1][0],
+              routeCoords[i + 1][1]
+            );
+          }
+          updateRouteVisuals(routePoints, routeCoords);
+        }
+      }
+
+      function updateRouteVisuals(routePoints, routeCoords) {
+        // Add route point tags with distance information
+        let cumulativeDistance = 0;
+        for (let i = 0; i < routePoints.length; i++) {
+          const point = routePoints[i].coords;
+          const name = routePoints[i].name;
+
+          if (i > 0) {
+            const prevPoint = routePoints[i - 1].coords;
+            cumulativeDistance += calculateDistance(
+              prevPoint[0],
+              prevPoint[1],
+              point[0],
+              point[1]
+            );
+          }
+
+          // Create tag for all route points
+          const isDestination = i === routePoints.length - 1;
+          const tag = L.divIcon({
+            className: `route-point-tag ${
+              isDestination ? "destination-tag" : ""
+            }`,
+            html: `${
+              name || (isDestination ? "Destination" : `Point ${i + 1}`)
+            } <span class="distance-badge">${Math.round(
+              cumulativeDistance
+            )}km</span>`,
+            iconSize: [100, 30],
+            iconAnchor: [50, 30],
+          });
+
+          const marker = L.marker(point, {
+            icon: tag,
+            zIndexOffset: 1000,
+          }).addTo(map);
+          routePointTags.push(marker);
+
+          // Add waypoint markers for intermediate points
+          if (i > 0 && i < routePoints.length - 1) {
+            const marker = L.marker(point, { icon: waypointIcon }).addTo(map);
+            waypointMarkers.push(marker);
+          }
+        }
+
+        // Update destination marker
+        destinationMarker.setPopupContent(
+          `<b>Destination:</b> ${destinationName}<br><b>Total Distance:</b> ${Math.round(
+            totalDistance
+          )}km`
+        );
+
+        // Create curved route using Routing Machine
+        const waypoints = routePoints.map((point) =>
+          L.latLng(point.coords[0], point.coords[1])
+        );
+
+        routeControl = L.Routing.control({
+          waypoints: waypoints,
+          routeWhileDragging: false,
+          show: false,
+          addWaypoints: false,
+          draggableWaypoints: false,
+          fitSelectedRoutes: true,
+          lineOptions: {
+            styles: [
+              {
+                color: getRouteColor(),
+                opacity: 0.7,
+                weight: 7,
+              },
+            ],
+          },
+        }).addTo(map);
+
+        // Get the actual route coordinates for animation
+        routeControl.on("routesfound", function (e) {
+          const routes = e.routes;
+          smoothedRoute = routes[0].coordinates.map((coord) => [
+            coord.lat,
+            coord.lng,
+          ]);
+
+          // Reset and start animation
+          if (animationId) {
+            cancelAnimationFrame(animationId);
+          }
+          currentPosition = 0;
+          currentSpeed = 0;
+          lastFrameTime = 0;
+          hasReachedDestination = false;
+          startTrip();
+        });
+      }
+
+      function getRouteColor() {
+        if (!destinationInfo.routes) return "#3498db";
+
+        const routeOption =
+          document.getElementById("routeOption")?.value || "fastest";
+        if (routeOption === "scenic") return "#27ae60";
+        if (routeOption === "historic") return "#e67e22";
+        return "#3498db";
+      }
+
+      // Haversine formula for distance calculation
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = deg2rad(lat2 - lat1);
+        const dLon = deg2rad(lon2 - lon1);
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(deg2rad(lat1)) *
+            Math.cos(deg2rad(lat2)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      function deg2rad(deg) {
+        return deg * (Math.PI / 180);
+      }
+
+      function startTrip() {
         lastFrameTime = 0;
-        hasReachedDestination = false;
-        startTrip();
-      });
-    }
+        animationId = requestAnimationFrame(animate);
+      }
 
-    function getRouteColor() {
-      if (!destinationInfo.routes) return '#3498db';
-      
-      const routeOption = document.getElementById('routeOption')?.value || 'fastest';
-      if (routeOption === 'scenic') return '#27ae60';
-      if (routeOption === 'historic') return '#e67e22';
-      return '#3498db';
-    }
+      function animate(timestamp) {
+        if (!lastFrameTime) lastFrameTime = timestamp;
+        const deltaTime = timestamp - lastFrameTime;
 
-    // Haversine formula for distance calculation
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371;
-      const dLat = deg2rad(lat2 - lat1);
-      const dLon = deg2rad(lon2 - lon1);
-      const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
-
-    function deg2rad(deg) {
-      return deg * (Math.PI/180);
-    }
-
-    function startTrip() {
-      lastFrameTime = 0;
-      animationId = requestAnimationFrame(animate);
-    }
-
-    function animate(timestamp) {
-      if (!lastFrameTime) lastFrameTime = timestamp;
-      const deltaTime = timestamp - lastFrameTime;
-      
-      if (deltaTime >= 1000 / targetFPS) {
+        if (deltaTime >= 1000 / targetFPS) {
           lastFrameTime = timestamp;
-          
+
           // Speed control
           if (currentSpeed < targetSpeed) {
-              currentSpeed = Math.min(currentSpeed + acceleration, targetSpeed);
+            currentSpeed = Math.min(currentSpeed + acceleration, targetSpeed);
           }
-          
+
           currentPosition += currentSpeed / 1000;
-          
+
           if (currentPosition >= 1) {
-              currentPosition = 1;
-              currentSpeed = 0;
-              updateCarPosition(currentPosition);
-              if (!hasReachedDestination) {
-                triggerConfetti();
-                hasReachedDestination = true;
-              }
-              return;
+            currentPosition = 1;
+            currentSpeed = 0;
+            updateCarPosition(currentPosition);
+            if (!hasReachedDestination) {
+              triggerConfetti();
+              hasReachedDestination = true;
+            }
+            return;
           }
-          
+
           updateCarPosition(currentPosition);
-      }
-      
-      animationId = requestAnimationFrame(animate);
-    }
-
-    function cubicInterpolate(y0, y1, y2, y3, mu) {
-      const mu2 = mu * mu;
-      const a0 = y3 - y2 - y0 + y1;
-      const a1 = y0 - y1 - a0;
-      const a2 = y2 - y0;
-      const a3 = y1;
-      return a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3;
-    }
-
-    function updateCarPosition(progress) {
-      const exactIndex = progress * (smoothedRoute.length - 1);
-      const index = Math.floor(exactIndex);
-      const nextIndex = Math.min(index + 1, smoothedRoute.length - 1);
-      const partialProgress = exactIndex % 1;
-
-      // Use cubic interpolation for smoother movement
-      const prevIndex = Math.max(index - 1, 0);
-      const nextNextIndex = Math.min(index + 2, smoothedRoute.length - 1);
-      
-      const currentPoint = smoothedRoute[index];
-      const nextPoint = smoothedRoute[nextIndex];
-      const prevPoint = smoothedRoute[prevIndex];
-      const nextNextPoint = smoothedRoute[nextNextIndex];
-
-      // Cubic interpolation for latitude
-      const lat = cubicInterpolate(
-          prevPoint[0], currentPoint[0], nextPoint[0], nextNextPoint[0], 
-          partialProgress
-      );
-      
-      // Cubic interpolation for longitude
-      const lng = cubicInterpolate(
-          prevPoint[1], currentPoint[1], nextPoint[1], nextNextPoint[1], 
-          partialProgress
-      );
-
-      // Update car position
-      carMarker.setLatLng([lat, lng]);
-      
-      // Calculate angle between current and next point
-      const rawAngle = calculateAngle(currentPoint, nextPoint);
-      const smoothedAngle = lastAngle + angleSmoothingFactor * (rawAngle - lastAngle);
-      lastAngle = smoothedAngle;
-      
-      // Update car rotation
-      carElement.style.setProperty('--rotation', `${smoothedAngle}deg`);
-      
-      // Smooth panning
-      const bounds = map.getBounds();
-      if (!bounds.contains([lat, lng])) {
-          map.panTo([lat, lng], { animate: true, duration: 0.5 });
-      }
-    }
-
-    function calculateAngle(currentPos, nextPos) {
-      const dx = nextPos[1] - currentPos[1];
-      const dy = nextPos[0] - currentPos[0];
-      return Math.atan2(dx, dy) * 180 / Math.PI;
-    }
-
-    function triggerConfetti() {
-      // Get the destination position on screen
-      const destPoint = map.latLngToContainerPoint(destinationMarker.getLatLng());
-      const x = destPoint.x / map.getSize().x;
-      const y = destPoint.y / map.getSize().y;
-      
-      // Confetti configuration
-      const colors = ['#8e44ad', '#e67e22', '#27ae60', '#3498db', '#f1c40f'];
-      
-      // Create confetti effect
-      const end = Date.now() + 3000; // 3 seconds of confetti
-      
-      (function frame() {
-        // Launch from left side
-        confetti({
-          particleCount: 5,
-          angle: 60,
-          spread: 55,
-          origin: { x, y },
-          colors: colors
-        });
-        
-        // Launch from right side
-        confetti({
-          particleCount: 5,
-          angle: 120,
-          spread: 55,
-          origin: { x, y },
-          colors: colors
-        });
-        
-        // Launch from bottom
-        confetti({
-          particleCount: 5,
-          angle: -90,
-          spread: 55,
-          origin: { x, y },
-          colors: colors
-        });
-        
-        // Continue if we're not done yet
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
         }
-        
-        // Open destination popup
-        destinationMarker.openPopup();
-      }());
-    }
-  </script>
-</body>
+
+        animationId = requestAnimationFrame(animate);
+      }
+
+      function cubicInterpolate(y0, y1, y2, y3, mu) {
+        const mu2 = mu * mu;
+        const a0 = y3 - y2 - y0 + y1;
+        const a1 = y0 - y1 - a0;
+        const a2 = y2 - y0;
+        const a3 = y1;
+        return a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3;
+      }
+
+      function updateCarPosition(progress) {
+        const exactIndex = progress * (smoothedRoute.length - 1);
+        const index = Math.floor(exactIndex);
+        const nextIndex = Math.min(index + 1, smoothedRoute.length - 1);
+        const partialProgress = exactIndex % 1;
+
+        // Use cubic interpolation for smoother movement
+        const prevIndex = Math.max(index - 1, 0);
+        const nextNextIndex = Math.min(index + 2, smoothedRoute.length - 1);
+
+        const currentPoint = smoothedRoute[index];
+        const nextPoint = smoothedRoute[nextIndex];
+        const prevPoint = smoothedRoute[prevIndex];
+        const nextNextPoint = smoothedRoute[nextNextIndex];
+
+        // Cubic interpolation for latitude
+        const lat = cubicInterpolate(
+          prevPoint[0],
+          currentPoint[0],
+          nextPoint[0],
+          nextNextPoint[0],
+          partialProgress
+        );
+
+        // Cubic interpolation for longitude
+        const lng = cubicInterpolate(
+          prevPoint[1],
+          currentPoint[1],
+          nextPoint[1],
+          nextNextPoint[1],
+          partialProgress
+        );
+
+        // Update car position
+        carMarker.setLatLng([lat, lng]);
+
+        // Calculate angle between current and next point
+        const rawAngle = calculateAngle(currentPoint, nextPoint);
+        const smoothedAngle =
+          lastAngle + angleSmoothingFactor * (rawAngle - lastAngle);
+        lastAngle = smoothedAngle;
+
+        // Update car rotation
+        carElement.style.setProperty("--rotation", `${smoothedAngle}deg`);
+
+        // Smooth panning
+        const bounds = map.getBounds();
+        if (!bounds.contains([lat, lng])) {
+          map.panTo([lat, lng], { animate: true, duration: 0.5 });
+        }
+      }
+
+      function calculateAngle(currentPos, nextPos) {
+        const dx = nextPos[1] - currentPos[1];
+        const dy = nextPos[0] - currentPos[0];
+        return (Math.atan2(dx, dy) * 180) / Math.PI;
+      }
+
+      function triggerConfetti() {
+        // Get the destination position on screen
+        const destPoint = map.latLngToContainerPoint(
+          destinationMarker.getLatLng()
+        );
+        const x = destPoint.x / map.getSize().x;
+        const y = destPoint.y / map.getSize().y;
+
+        // Confetti configuration
+        const colors = ["#8e44ad", "#e67e22", "#27ae60", "#3498db", "#f1c40f"];
+
+        // Create confetti effect
+        const end = Date.now() + 3000; // 3 seconds of confetti
+
+        (function frame() {
+          // Launch from left side
+          confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 55,
+            origin: { x, y },
+            colors: colors,
+          });
+
+          // Launch from right side
+          confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 55,
+            origin: { x, y },
+            colors: colors,
+          });
+
+          // Launch from bottom
+          confetti({
+            particleCount: 5,
+            angle: -90,
+            spread: 55,
+            origin: { x, y },
+            colors: colors,
+          });
+
+          // Continue if we're not done yet
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+
+          // Open destination popup
+          destinationMarker.openPopup();
+        })();
+      }
+      // Get destination name from page title
+     
+    </script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Initialize AOS animations
+        AOS.init();
+
+        const firstPackage = document.getElementById("package1");
+        if (firstPackage) {
+          firstPackage.classList.remove("d-none");
+          firstPackage.classList.add("show");
+        }
+
+        // Handle package selection
+        const packageSelector = document.getElementById("packageSelector");
+        if (packageSelector) {
+          packageSelector.addEventListener("change", function () {
+            const selectedValue = this.value;
+
+            // Handle custom package selection
+            if (selectedValue === "custom") {
+              window.location.href =
+                "{% url 'custom_package' %}?destination={{ destination.name|urlencode }}";
+              return;
+            }
+
+            // Hide all packages first
+            document.querySelectorAll(".package-card").forEach((card) => {
+              card.classList.add("d-none");
+              card.classList.remove("show");
+            });
+
+            if (selectedValue) {
+              // Show all packages up to the selected one with staggered animation
+              for (let i = 1; i <= selectedValue; i++) {
+                const packageCard = document.getElementById(`package${i}`);
+                if (packageCard) {
+                  setTimeout(() => {
+                    packageCard.classList.remove("d-none");
+                    setTimeout(() => {
+                      packageCard.classList.add("show");
+                    }, 50);
+                  }, (i - 1) * 150); // Stagger the animations
+                }
+              }
+            }
+
+            // Scroll to packages section
+            const packagesContainer =
+              document.getElementById("packagesContainer");
+            if (packagesContainer) {
+              packagesContainer.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }
+          });
+        }
+
+        // Add hover effect to dropdown options
+        const dropdownOptions = document.querySelectorAll(
+          ".package-selector option"
+        );
+        dropdownOptions.forEach((option) => {
+          option.addEventListener("mouseenter", function () {
+            this.style.backgroundColor = "#8e44ad";
+            this.style.color = "white";
+          });
+          option.addEventListener("mouseleave", function () {
+            this.style.backgroundColor = "";
+            this.style.color = "";
+          });
+        });
+      });
+    </script>
+    
+    <script>
+      const dropdown = document.getElementById("customDropdown");
+      const selected = dropdown.querySelector(".selected");
+      const options = dropdown.querySelectorAll(".dropdown-list li");
+
+      selected.addEventListener("click", () => {
+        dropdown.classList.toggle("open");
+      });
+
+      options.forEach((option) => {
+        option.addEventListener("click", () => {
+          selected.textContent = option.textContent;
+          dropdown.classList.remove("open");
+
+          const value = option.getAttribute("data-value");
+
+          // Handle custom package redirect
+          if (value === "custom") {
+            window.location.href =
+              "{% url 'custom_package' %}?destination={{ destination.name|urlencode }}";
+            return;
+          }
+
+          // Hide all packages initially
+          document.querySelectorAll(".package-card").forEach((card) => {
+            card.classList.add("d-none");
+            card.classList.remove("show");
+          });
+
+          // Show cumulative day packages (e.g., 1+2+3)
+          const selectedDays = parseInt(value);
+          if (!isNaN(selectedDays)) {
+            for (let i = 1; i <= selectedDays; i++) {
+              const packageCard = document.getElementById("package" + i);
+              if (packageCard) {
+                setTimeout(() => {
+                  packageCard.classList.remove("d-none");
+                  setTimeout(() => {
+                    packageCard.classList.add("show");
+                  }, 50);
+                }, (i - 1) * 150); // stagger animation
+              }
+            }
+
+            // Smooth scroll to packages section
+            const packagesContainer =
+              document.getElementById("packagesContainer");
+            if (packagesContainer) {
+              packagesContainer.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }
+          }
+        });
+      });
+
+      // Close dropdown when clicking outside
+      window.addEventListener("click", function (e) {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove("open");
+        }
+      });
+    </script>
+  </body>
 </html>
 {% endblock %}

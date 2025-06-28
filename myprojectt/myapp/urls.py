@@ -31,5 +31,7 @@ urlpatterns = [
     path('destinations/andra', views.all_andra, name='all_andra'),
     path('destination/andra/<slug:destination_slug>/', views.destination_andhra, name='destination_andhra'),
 
+    path('destinastions/custom', views.custom_package, name='custom_package'),
+
      
 ]

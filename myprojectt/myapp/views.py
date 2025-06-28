@@ -38,7 +38,7 @@ def destination_detail(request, destination_slug):
             'itinerary': [
                 {
                     'day': 1,
-                    'title': 'Arrival & Meenakshi Temple',
+                    'title': 'Meenakshi Temple & City Exploration',
                     'activities': [
                         'Arrive in Madurai and check into your hotel',
                         'Afternoon visit to the magnificent Meenakshi Amman Temple',
@@ -953,7 +953,15 @@ def destination_detail(request, destination_slug):
         }
     }
     
-    destination = destination_data.get(destination_slug, {})
+    for dest in destination_data.values():
+        for day in dest['itinerary']:
+            day['activities'] = [act for act in day['activities'] 
+                               if 'arrive' not in act.lower() 
+                               and 'depart' not in act.lower()
+                               and 'check in' not in act.lower()
+                               and 'return' not in act.lower()]
+    
+    destination = destination_data.get(destination_slug, {}) 
     return render(request, 'customers/destination_detail.html', {'destination': destination})
 
 # admin
@@ -4005,10 +4013,16 @@ def destination_kerala(request, destination_slug):
             ]
         }
     }
+    for dest in destination_data.values():
+        for day in dest['itinerary']:
+            day['activities'] = [act for act in day['activities'] 
+                               if 'arrive' not in act.lower() 
+                               and 'depart' not in act.lower()
+                               and 'check in' not in act.lower()
+                               and 'return' not in act.lower()]
     
     destination = destination_data.get(destination_slug, {})
     return render(request, 'kerala/destination_kerala.html', {'destination': destination})
-
 #karnataka
 
 def karnataka(request):
@@ -4914,11 +4928,18 @@ def destination_karnataka(request, destination_slug):
         ]
     },
   }  
+  for dest in destination_data.values():
+        for day in dest['itinerary']:
+            day['activities'] = [act for act in day['activities'] 
+                               if 'arrive' not in act.lower() 
+                               and 'depart' not in act.lower()
+                               and 'check in' not in act.lower()
+                               and 'return' not in act.lower()]
 
     
   destination = destination_data.get(destination_slug, {})
   return render(request, 'karnataka/destination_karnataka.html',{'destination': destination})
-
+     
 
 #andra
 
@@ -5673,8 +5694,15 @@ def destination_andhra(request, destination_slug):
             ]
         }
     }
+    for dest in destination_data.values():
+        for day in dest['itinerary']:
+            day['activities'] = [act for act in day['activities'] 
+                               if 'arrive' not in act.lower() 
+                               and 'depart' not in act.lower()
+                               and 'check in' not in act.lower()
+                               and 'return' not in act.lower()]
 
     destination = destination_data.get(destination_slug, {})
     return render(request, 'andra/destination_andra.html', {'destination': destination})
-
-
+def custom_package(request):
+    return render(request, 'kerala/custom_package.html')
